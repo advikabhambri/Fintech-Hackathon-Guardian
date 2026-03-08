@@ -1,0 +1,22 @@
+{
+  "name": "guardian",
+  "version": "1.0.0",
+  "description": "Comprehensive financial wellness platform",
+  "scripts": {
+    "start": "./start.sh",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:rebuild": "docker-compose up -d --build"
+  },
+  "keywords": [
+    "wealth",
+    "finance",
+    "portfolio",
+    "goals",
+    "fastapi",
+    "react"
+  ],
+  "author": "",
+  "license": "MIT"
+}
