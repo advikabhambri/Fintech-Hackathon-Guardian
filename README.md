@@ -1,27 +1,106 @@
-# Guardian
+# Guardian - Wealth Wellness Hub
 
-A comprehensive financial wellness platform built with React, FastAPI, and PostgreSQL.
+## 📖 ABOUT
+
+### Project Overview
+**Guardian** is a comprehensive financial wellness platform designed to empower users to take control of their financial health through intelligent portfolio management, goal tracking, and behavioral insights. The platform combines traditional investment tracking with modern wellness metrics, helping users make informed financial decisions while maintaining emotional balance during market volatility.
+
+### Team
+**Finance bros** - A dedicated team committed to making financial wellness accessible and actionable for everyone.
+
+### Project Description
+Guardian provides a holistic approach to personal finance by integrating portfolio management, financial goal tracking, and wellness scoring into a unified platform. The system goes beyond simple asset tracking by analyzing user behavior, providing calm mode features to prevent impulsive decisions during market downturns, and offering personalized recommendations to improve overall financial health.
+
+Key highlights include:
+- **Comprehensive Asset Management**: Track stocks, bonds, crypto, real estate, and more in one place
+- **Financial Wellness Scoring**: Get a holistic health score (0-100) analyzing diversification, liquidity, behavioral resilience, and risk management
+- **Behavioral Intelligence**: Smart timing checks and impulse alert systems to protect against emotional trading
+- **Calm Mode**: Investor protection features that provide perspective during market volatility
+- **Multi-Source Synchronization**: Aggregate data from traditional banking and cryptocurrency exchanges
+- **Goal-Oriented Planning**: Set and track financial goals with visual progress indicators
+
+## 🛠️ Technologies Used
+
+### Frontend Stack
+- **Framework**: React 18.2.0 with TypeScript 5.2.2
+- **Build Tool**: Vite 7.3.1 (ultra-fast development and building)
+- **Styling**: 
+  - Tailwind CSS 3.4.1 (utility-first CSS framework)
+  - PostCSS 8.4.35 (CSS processing)
+  - Autoprefixer 10.4.17 (vendor prefixing)
+- **State Management**: Zustand 4.5.0 (lightweight state management)
+- **Routing**: React Router DOM 6.22.0
+- **Form Handling**: 
+  - React Hook Form 7.50.0 (performant forms)
+  - Zod 3.22.4 (TypeScript-first schema validation)
+  - @hookform/resolvers 3.3.4
+- **Data Visualization**: Recharts 2.10.4 (composable charting library)
+- **Animations**: Framer Motion 12.35.1 (production-ready animations)
+- **Icons**: Lucide React 0.323.0 (beautiful icon library)
+- **HTTP Client**: Axios 1.6.5
+- **Linting**: ESLint 8.56.0 with TypeScript support
+
+### Backend Stack
+- **Framework**: FastAPI (high-performance async Python web framework)
+- **Runtime**: Python 3.x with ASGI server (Uvicorn)
+- **Database**: PostgreSQL 15-Alpine (robust relational database)
+- **ORM**: SQLAlchemy (SQL toolkit and ORM)
+- **Authentication**: 
+  - JWT tokens via python-jose
+  - HS256 algorithm for token signing
+  - Configurable token expiration
+- **Security**: 
+  - Passlib with bcrypt (password hashing)
+  - CORS middleware (cross-origin resource sharing)
+  - Environment-based secret management
+- **Validation**: Pydantic (data validation using Python type hints)
+- **API Documentation**: 
+  - OpenAPI/Swagger UI (auto-generated interactive docs)
+  - ReDoc (alternative API documentation)
+
+### Infrastructure & DevOps
+- **Containerization**: 
+  - Docker (application containerization)
+  - Docker Compose 3.8 (multi-container orchestration)
+- **Database Management**: 
+  - PostgreSQL with persistent volumes
+  - Health checks and automatic restart policies
+- **Networking**: Bridge network for container communication
+- **Development Tools**:
+  - Hot module replacement (Vite HMR)
+  - Auto-reload for backend (Uvicorn --reload)
+  - Volume mounting for live code updates
+
+### Development Tools & Libraries
+- **Code Quality**:
+  - TypeScript (static typing)
+  - ESLint with React and TypeScript plugins
+  - Prettier-compatible formatting
+- **Package Management**:
+  - npm (frontend dependencies)
+  - pip (Python dependencies)
+- **Version Control**: Git-friendly with .gitignore configurations
+- **Environment Management**: .env files for configuration
+
+### External Service Integrations (Mock)
+- **Plaid API**: Traditional banking data synchronization
+- **Cryptocurrency APIs**: Multi-exchange crypto portfolio aggregation
+- **Financial Data APIs**: Real-time asset pricing and market data
 
 ## 🏗️ Architecture
 
-### Frontend
-- **Framework**: React 18 + TypeScript
-- **Styling**: Tailwind CSS
-- **Icons**: Lucide React
-- **State Management**: Zustand
-- **Charts**: Recharts
-- **Build Tool**: Vite
+### System Design
+The application follows a modern three-tier architecture with clear separation of concerns:
 
-### Backend
-- **Framework**: FastAPI (Python)
-- **Database**: PostgreSQL 15
-- **ORM**: SQLAlchemy
-- **Authentication**: JWT (python-jose)
-- **Password Hashing**: Passlib with bcrypt
+1. **Presentation Layer (Frontend)**: React SPA with TypeScript
+2. **Application Layer (Backend)**: FastAPI with RESTful endpoints
+3. **Data Layer**: PostgreSQL with SQLAlchemy ORM
 
-### Infrastructure
-- **Containerization**: Docker & Docker Compose
-- **Database**: PostgreSQL with persistent volumes
+### Container Architecture
+- **Frontend Container**: Nginx-served React build (port 3000)
+- **Backend Container**: Uvicorn ASGI server (port 8000)
+- **Database Container**: PostgreSQL 15-Alpine (port 5432)
+- **Network**: Isolated Docker bridge network for secure communication
 
 ## 📁 Project Structure
 
