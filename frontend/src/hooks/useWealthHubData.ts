@@ -215,8 +215,8 @@ export function useWealthHubData(): UseWealthHubDataReturn {
         setIsLoading(true)
         setError(null)
 
-        // Fetch wellness score
-        const wellnessResponse = await api.get<WellnessData>('/wellness/detailed')
+        // Fetch wellness score from correct endpoint
+        const wellnessResponse = await api.get<WellnessData>('/api/wellness-score/detailed')
         
         if (wellnessResponse.data.success && wellnessResponse.data.financial_health) {
           setWellness(wellnessResponse.data.financial_health)
@@ -225,8 +225,8 @@ export function useWealthHubData(): UseWealthHubDataReturn {
           })
         }
 
-        // Fetch aggregated assets
-        const assetsResponse = await api.get<AggregatedAssets>('/sync/summary')
+        // Fetch aggregated assets from correct endpoint
+        const assetsResponse = await api.get<AggregatedAssets>('/api/sync/summary')
         
         // Transform aggregated assets to unified wallet format
         // Demo: Alternative value is calculated as 15% of traditional for diversification
