@@ -60,6 +60,7 @@ export default function Portfolio() {
   const [loading, setLoading] = useState(true)
   const [isSeeding, setIsSeeding] = useState(false)
   const [infoMessage, setInfoMessage] = useState('')
+  const [selectedSeedProfile, setSelectedSeedProfile] = useState<'conservative' | 'balanced' | 'aggressive'>('balanced')
   const [showModal, setShowModal] = useState(false)
   const [formData, setFormData] = useState({
     asset_name: '',
@@ -133,13 +134,14 @@ export default function Portfolio() {
     }
   }
 
-  const handleSeedSamplePortfolio = async () => {
+  const handleSeedSamplePortfolio = async (profile: 'conservative' | 'balanced' | 'aggressive') => {
     setIsSeeding(true)
     setInfoMessage('')
+    setSelectedSeedProfile(profile)
 
     try {
-      await api.post('/api/portfolio/seed-demo?replace_existing=true')
-      setInfoMessage('Sample portfolio loaded successfully.')
+      await api.post(`/api/portfolio/seed-demo?replace_existing=true&profile=${profile}`)
+      setInfoMessage(`${profile.charAt(0).toUpperCase() + profile.slice(1)} sample portfolio loaded successfully.`)
       await fetchPortfolio()
     } catch (error) {
       console.error('Failed to seed sample portfolio:', error)
@@ -205,13 +207,29 @@ export default function Portfolio() {
           <p className="text-slate-300 mt-1 text-sm">Manage your investment portfolio</p>
         </div>
         <div className="flex items-center space-x-3">
-          <button
-            onClick={handleSeedSamplePortfolio}
-            disabled={isSeeding}
-            className="btn-secondary text-sm"
-          >
-            {isSeeding ? 'Loading Samples...' : 'Load Sample Portfolio'}
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => handleSeedSamplePortfolio('conservative')}
+              disabled={isSeeding}
+              className={`text-xs px-3 py-2 rounded-lg transition-colors border ${selectedSeedProfile === 'conservative' ? 'bg-blue-500/20 text-blue-200 border-blue-400/40' : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'}`}
+            >
+              Conservative
+            </button>
+            <button
+              onClick={() => handleSeedSamplePortfolio('balanced')}
+              disabled={isSeeding}
+              className={`text-xs px-3 py-2 rounded-lg transition-colors border ${selectedSeedProfile === 'balanced' ? 'bg-blue-500/20 text-blue-200 border-blue-400/40' : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'}`}
+            >
+              Balanced
+            </button>
+            <button
+              onClick={() => handleSeedSamplePortfolio('aggressive')}
+              disabled={isSeeding}
+              className={`text-xs px-3 py-2 rounded-lg transition-colors border ${selectedSeedProfile === 'aggressive' ? 'bg-blue-500/20 text-blue-200 border-blue-400/40' : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'}`}
+            >
+              Aggressive
+            </button>
+          </div>
           <button
             onClick={() => setShowModal(true)}
             className="btn-primary flex items-center space-x-2 text-sm"
