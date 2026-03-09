@@ -252,17 +252,18 @@ export default function WealthAnalytics() {
   ], [portfolioDerivedValues, safeTotalNetWorth])
 
   // Comparison Data: Asset Performance Transformation (Current vs Purchase)
-  const assetPerformanceComparison = useMemo(() => 
-    compositionData.map(asset => ({
+  const assetPerformanceComparison = useMemo(() => {
+    const comparison = compositionData.map(asset => ({
       name: asset.name,
       currentValue: asset.value,
       purchasePrice: asset.purchasePrice,
       gainLoss: asset.value - asset.purchasePrice,
       gainLossPercent: ((asset.value - asset.purchasePrice) / asset.purchasePrice * 100).toFixed(1),
       color: asset.color,
-    })),
-    [compositionData]
-  )
+    }))
+    console.log('Asset Performance Comparison Data:', comparison)
+    return comparison
+  }, [compositionData])
 
   // Asset type distribution
   const distributionColors = ['#3b82f6', '#f59e0b', '#8b5cf6', '#22c55e', '#ec4899', '#06b6d4']
@@ -347,6 +348,18 @@ export default function WealthAnalytics() {
   const lastValue = historicalData[historicalData.length - 1]?.totalNetWorth || 0
   const growthAmount = lastValue - firstValue
   const growthPercent = firstValue > 0 ? (growthAmount / firstValue) * 100 : 0
+
+  // Debug logging
+  console.log('Analytics Data Check:', {
+    historicalDataLength: historicalData.length,
+    compositionDataLength: compositionData.length,
+    assetPerformanceLength: assetPerformanceComparison.length,
+    healthRadarLength: healthRadarData.length,
+    sampleHistorical: historicalData[0],
+    sampleComposition: compositionData[0],
+    samplePerformance: assetPerformanceComparison[0],
+    sampleHealth: healthRadarData[0],
+  })
 
   if (isLoading || portfolioLoading) {
     return <div className="py-8 text-center text-slate-300">Loading Analytics...</div>
@@ -773,132 +786,150 @@ export default function WealthAnalytics() {
           {/* Asset Performance Comparison - Current vs Purchase Price */}
           <motion.div variants={cardVariants} className="card p-8">
             <h3 className="text-lg font-bold text-white mb-6">Asset Class Performance Comparison</h3>
-            <div className="w-full h-96 bg-slate-900/20 rounded-lg">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={assetPerformanceComparison}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
-                  <XAxis 
-                    dataKey="name" 
-                    stroke="#94a3b8" 
-                    style={{ fontSize: '12px' }}
-                    angle={-45}
-                    textAnchor="end"
-                    height={100}
-                  />
-                  <YAxis stroke="#94a3b8" style={{ fontSize: '12px' }} tickFormatter={formatCurrency} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '12px',
-                      color: '#fff',
-                    }}
-                    formatter={(value: number) => formatCurrency(value)}
-                  />
-                  <Legend />
-                  <Bar 
-                    dataKey="currentValue" 
-                    fill={GUARDIAN_COLORS.emerald} 
-                    radius={[8, 8, 0, 0]} 
-                    animationDuration={800} 
-                    name="Current Value"
-                  />
-                  <Bar 
-                    dataKey="purchasePrice" 
-                    fill={GUARDIAN_COLORS.slate} 
-                    radius={[8, 8, 0, 0]} 
-                    animationDuration={800} 
-                    name="Purchase Price"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            {assetPerformanceComparison.length > 0 ? (
+              <div className="w-full h-96 bg-slate-900/20 rounded-lg p-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={assetPerformanceComparison}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
+                    <XAxis 
+                      dataKey="name" 
+                      stroke="#94a3b8" 
+                      style={{ fontSize: '12px' }}
+                      angle={-45}
+                      textAnchor="end"
+                      height={100}
+                    />
+                    <YAxis stroke="#94a3b8" style={{ fontSize: '12px' }} tickFormatter={formatCurrency} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '12px',
+                        color: '#fff',
+                      }}
+                      formatter={(value: number) => formatCurrency(value)}
+                    />
+                    <Legend />
+                    <Bar 
+                      dataKey="currentValue" 
+                      fill={GUARDIAN_COLORS.emerald} 
+                      radius={[8, 8, 0, 0]} 
+                      animationDuration={800} 
+                      name="Current Value"
+                    />
+                    <Bar 
+                      dataKey="purchasePrice" 
+                      fill={GUARDIAN_COLORS.slate} 
+                      radius={[8, 8, 0, 0]} 
+                      animationDuration={800} 
+                      name="Purchase Price"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="w-full h-96 bg-slate-900/20 rounded-lg flex items-center justify-center">
+                <p className="text-slate-400">Loading comparison data...</p>
+              </div>
+            )}
           </motion.div>
 
           {/* Health Metrics Comparison - Horizontal Bar Chart */}
           <motion.div variants={cardVariants} className="card p-8">
             <h3 className="text-lg font-bold text-white mb-6">Health Metrics Comparison</h3>
-            <div className="w-full h-80 bg-slate-900/20 rounded-lg">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={healthRadarData}
-                  layout="vertical"
-                  margin={{ top: 20, right: 30, left: 140, bottom: 20 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" horizontal={false} />
-                  <XAxis type="number" domain={[0, 100]} stroke="#94a3b8" style={{ fontSize: '12px' }} />
-                  <YAxis type="category" dataKey="metric" stroke="#94a3b8" style={{ fontSize: '12px' }} width={130} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '12px',
-                      color: '#fff',
-                    }}
-                    formatter={(value: number) => `${value.toFixed(1)}/100`}
-                  />
-                  <Bar dataKey="score" fill={GUARDIAN_COLORS.electricBlue} radius={[0, 8, 8, 0]} animationDuration={800} name="Score" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            {healthRadarData.length > 0 ? (
+              <div className="w-full h-80 bg-slate-900/20 rounded-lg p-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={healthRadarData}
+                    layout="vertical"
+                    margin={{ top: 20, right: 30, left: 140, bottom: 20 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" horizontal={false} />
+                    <XAxis type="number" domain={[0, 100]} stroke="#94a3b8" style={{ fontSize: '12px' }} />
+                    <YAxis type="category" dataKey="metric" stroke="#94a3b8" style={{ fontSize: '12px' }} width={130} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '12px',
+                        color: '#fff',
+                      }}
+                      formatter={(value: number) => `${value.toFixed(1)}/100`}
+                    />
+                    <Bar dataKey="score" fill={GUARDIAN_COLORS.electricBlue} radius={[0, 8, 8, 0]} animationDuration={800} name="Score" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="w-full h-80 bg-slate-900/20 rounded-lg flex items-center justify-center">
+                <p className="text-slate-400">Loading health metrics...</p>
+              </div>
+            )}
           </motion.div>
 
           {/* Asset Allocation vs Wellness Correlation */}
           <motion.div variants={cardVariants} className="card p-8">
             <h3 className="text-lg font-bold text-white mb-6">Net Worth vs Wellness Score Correlation</h3>
-            <div className="w-full h-96 bg-slate-900/20 rounded-lg">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={historicalData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
-                  <XAxis dataKey="date" stroke="#94a3b8" style={{ fontSize: '12px' }} />
-                  <YAxis 
-                    yAxisId="left"
-                    stroke="#94a3b8" 
-                    style={{ fontSize: '12px' }}
-                    tickFormatter={formatCurrency}
-                  />
-                  <YAxis 
-                    yAxisId="right"
-                    orientation="right"
-                    stroke="#94a3b8" 
-                    style={{ fontSize: '12px' }}
-                    domain={[0, 100]}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '12px',
-                      color: '#fff',
-                    }}
-                  />
-                  <Legend />
-                  <Line
-                    yAxisId="left"
-                    type="monotone"
-                    dataKey="totalNetWorth"
-                    stroke={GUARDIAN_COLORS.electricBlue}
-                    strokeWidth={3}
-                    name="Net Worth"
-                    dot={false}
-                    animationDuration={1000}
-                  />
-                  <Line
-                    yAxisId="right"
-                    type="monotone"
-                    dataKey="wellnessScore"
-                    stroke={GUARDIAN_COLORS.emerald}
-                    strokeWidth={3}
-                    name="Wellness Score"
-                    dot={false}
-                    animationDuration={1000}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+            {historicalData.length > 0 ? (
+              <div className="w-full h-96 bg-slate-900/20 rounded-lg p-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={historicalData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
+                    <XAxis dataKey="date" stroke="#94a3b8" style={{ fontSize: '12px' }} />
+                    <YAxis 
+                      yAxisId="left"
+                      stroke="#94a3b8" 
+                      style={{ fontSize: '12px' }}
+                      tickFormatter={formatCurrency}
+                    />
+                    <YAxis 
+                      yAxisId="right"
+                      orientation="right"
+                      stroke="#94a3b8" 
+                      style={{ fontSize: '12px' }}
+                      domain={[0, 100]}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '12px',
+                        color: '#fff',
+                      }}
+                    />
+                    <Legend />
+                    <Line
+                      yAxisId="left"
+                      type="monotone"
+                      dataKey="totalNetWorth"
+                      stroke={GUARDIAN_COLORS.electricBlue}
+                      strokeWidth={3}
+                      name="Net Worth"
+                      dot={false}
+                      animationDuration={1000}
+                    />
+                    <Line
+                      yAxisId="right"
+                      type="monotone"
+                      dataKey="wellnessScore"
+                      stroke={GUARDIAN_COLORS.emerald}
+                      strokeWidth={3}
+                      name="Wellness Score"
+                      dot={false}
+                      animationDuration={1000}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="w-full h-96 bg-slate-900/20 rounded-lg flex items-center justify-center">
+                <p className="text-slate-400">Loading correlation data...</p>
+              </div>
+            )}
           </motion.div>
         </motion.div>
       )}
