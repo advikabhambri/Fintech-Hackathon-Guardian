@@ -51,6 +51,17 @@ const FALLBACK_ANALYTICS_VALUES = {
   cashValue: 18000,
 }
 
+// Guardian Palette Colors
+const GUARDIAN_COLORS = {
+  electricBlue: '#3b82f6',
+  emerald: '#22c55e',
+  slate: '#64748b',
+  purple: '#8b5cf6',
+  amber: '#f59e0b',
+  cyan: '#06b6d4',
+  rose: '#f43f5e',
+}
+
 function formatCurrency(value: number) {
   if (value >= 1000000) {
     return `$${(value / 1000000).toFixed(1)}M`
@@ -134,52 +145,71 @@ export default function WealthAnalytics() {
 
   const safeTotalNetWorth = portfolioDerivedValues.totalNetWorth > 0 ? portfolioDerivedValues.totalNetWorth : 1
 
-  // Generate historical data for time-series from portfolio/sample assets
+  // Generate Mock Historical Data: 6+ months of trends with robust values
   const historicalData = useMemo(() => {
-    const months = timeRange === '7d' ? 7 : timeRange === '1m' ? 30 : timeRange === '3m' ? 90 : timeRange === '6m' ? 180 : timeRange === '1y' ? 365 : 730
+    const periods = timeRange === '7d' ? 7 : timeRange === '1m' ? 30 : timeRange === '3m' ? 90 : timeRange === '6m' ? 180 : timeRange === '1y' ? 365 : 730
     const data = []
 
     const currentValue = (item: PortfolioItem) => (item.current_price ?? item.purchase_price) * item.quantity
     const purchaseValue = (item: PortfolioItem) => item.purchase_price * item.quantity
 
+    // Calculate base values with fallback
     const portfolioCurrentTotal = portfolioItems.reduce((sum, item) => sum + currentValue(item), 0)
     const portfolioPurchaseTotal = portfolioItems.reduce((sum, item) => sum + purchaseValue(item), 0)
 
-    const baseCurrent = portfolioDerivedValues.hasPortfolioData ? portfolioCurrentTotal : portfolioDerivedValues.totalNetWorth
-    const basePurchase = portfolioDerivedValues.hasPortfolioData ? portfolioPurchaseTotal : portfolioDerivedValues.totalNetWorth * 0.82
+    const baseCurrent = portfolioCurrentTotal > 0 ? portfolioCurrentTotal : portfolioDerivedValues.totalNetWorth
+    const basePurchase = portfolioPurchaseTotal > 0 ? portfolioPurchaseTotal : portfolioDerivedValues.totalNetWorth * 0.75
 
-    for (let i = 0; i < months; i++) {
-      const normalizedProgress = i / months
-      const marketCycle = Math.sin(normalizedProgress * Math.PI * 4) * 0.04
-      const totalNetWorth = basePurchase + (baseCurrent - basePurchase) * normalizedProgress + baseCurrent * marketCycle
+    // Ensure minimum values for visible charts
+    const effectiveBaseCurrent = Math.max(baseCurrent, 100000)
+    const effectiveBasePurchase = Math.max(basePurchase, 75000)
 
-      const traditionalValue = portfolioDerivedValues.traditionalValue * (0.82 + normalizedProgress * 0.2 + Math.sin(normalizedProgress * Math.PI * 2) * 0.01)
-      const digitalValue = portfolioDerivedValues.digitalValue * (0.72 + normalizedProgress * 0.32 + Math.sin(normalizedProgress * Math.PI * 5) * 0.03)
-      const alternativeValue = portfolioDerivedValues.alternativeValue * (0.85 + normalizedProgress * 0.18 + Math.sin(normalizedProgress * Math.PI * 3) * 0.015)
+    // Generate data points with realistic market cycles
+    for (let i = 0; i < periods; i++) {
+      const progress = i / periods
+      
+      // Market cycles: bull, correction, recovery patterns
+      const longTermGrowth = progress * 0.25 // 25% growth over period
+      const marketVolatility = Math.sin(progress * Math.PI * 3) * 0.06 // ±6% volatility
+      const seasonalTrend = Math.cos(progress * Math.PI * 6) * 0.02 // ±2% seasonal
+      
+      const growthFactor = 1 + longTermGrowth + marketVolatility + seasonalTrend
+      const totalNetWorth = effectiveBasePurchase * growthFactor + (effectiveBaseCurrent - effectiveBasePurchase) * progress
 
-      const uniqueTypes = new Set(portfolioItems.map(i => i.asset_type)).size || 1
+      // Asset class allocations with individual trends
+      const traditionalGrowth = 0.82 + progress * 0.22 + Math.sin(progress * Math.PI * 2) * 0.03
+      const digitalGrowth = 0.65 + progress * 0.45 + Math.sin(progress * Math.PI * 5) * 0.08 // More volatile
+      const alternativeGrowth = 0.80 + progress * 0.25 + Math.sin(progress * Math.PI * 3.5) * 0.04
+
+      const traditionalValue = portfolioDerivedValues.traditionalValue * traditionalGrowth
+      const digitalValue = portfolioDerivedValues.digitalValue * digitalGrowth
+      const alternativeValue = portfolioDerivedValues.alternativeValue * alternativeGrowth
+
+      // Health scores with realistic progression
+      const uniqueTypes = new Set(portfolioItems.map(i => i.asset_type)).size || 5
       const cashRatio = portfolioDerivedValues.cashValue / safeTotalNetWorth
       const concentration = portfolioItems.length
         ? Math.max(...portfolioItems.map(i => currentValue(i))) / safeTotalNetWorth
-        : 0.3
+        : 0.25
       const positivePositionsRatio = portfolioItems.length
         ? portfolioItems.filter(i => (i.current_price ?? i.purchase_price) >= i.purchase_price).length / portfolioItems.length
-        : 0.6
+        : 0.68
 
-      const diversificationScore = Math.min(100, 55 + uniqueTypes * 7 + normalizedProgress * 5)
-      const liquidityScore = Math.min(100, Math.max(40, cashRatio * 250 + 30 + normalizedProgress * 4))
-      const resilienceScore = Math.min(100, Math.max(45, (1 - concentration) * 60 + positivePositionsRatio * 35 + normalizedProgress * 5))
-      const wellnessScore = Math.min(100, Math.max(50, (diversificationScore + liquidityScore + resilienceScore) / 3))
+      // Calculate wellness metrics (0-100 scale)
+      const diversificationScore = Math.min(100, Math.max(45, 50 + uniqueTypes * 8 + progress * 12))
+      const liquidityScore = Math.min(100, Math.max(35, cashRatio * 280 + 25 + progress * 15))
+      const resilienceScore = Math.min(100, Math.max(40, (1 - concentration) * 65 + positivePositionsRatio * 30 + progress * 10))
+      const wellnessScore = (diversificationScore + liquidityScore + resilienceScore) / 3
       
       const date = new Date()
-      date.setDate(date.getDate() - (months - i))
+      date.setDate(date.getDate() - (periods - i))
       
       data.push({
         date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        totalNetWorth: parseFloat(totalNetWorth.toFixed(2)),
-        traditionalValue: parseFloat(traditionalValue.toFixed(2)),
-        digitalValue: parseFloat(digitalValue.toFixed(2)),
-        alternativeValue: parseFloat(alternativeValue.toFixed(2)),
+        totalNetWorth: Math.max(50000, parseFloat(totalNetWorth.toFixed(2))),
+        traditionalValue: Math.max(25000, parseFloat(traditionalValue.toFixed(2))),
+        digitalValue: Math.max(5000, parseFloat(digitalValue.toFixed(2))),
+        alternativeValue: Math.max(10000, parseFloat(alternativeValue.toFixed(2))),
         wellnessScore: parseFloat(wellnessScore.toFixed(1)),
         diversificationScore: parseFloat(diversificationScore.toFixed(1)),
         liquidityScore: parseFloat(liquidityScore.toFixed(1)),
@@ -189,33 +219,50 @@ export default function WealthAnalytics() {
     return data
   }, [timeRange, portfolioItems, portfolioDerivedValues, safeTotalNetWorth])
 
-  // Wealth composition for pie chart
-  const compositionData = [
+  // Wealth Composition Data with Guardian Palette
+  const compositionData = useMemo(() => [
     { 
       name: 'Stocks & Bonds', 
-      value: portfolioDerivedValues.traditionalValue, 
-      color: '#3b82f6',
+      value: Math.max(1000, portfolioDerivedValues.traditionalValue),
+      purchasePrice: Math.max(800, portfolioDerivedValues.traditionalValue * 0.85),
+      color: GUARDIAN_COLORS.electricBlue,
       percentage: (portfolioDerivedValues.traditionalValue / safeTotalNetWorth * 100).toFixed(1)
     },
     { 
       name: 'Cryptocurrency', 
-      value: portfolioDerivedValues.digitalValue, 
-      color: '#f59e0b',
+      value: Math.max(500, portfolioDerivedValues.digitalValue),
+      purchasePrice: Math.max(300, portfolioDerivedValues.digitalValue * 0.70),
+      color: GUARDIAN_COLORS.amber,
       percentage: (portfolioDerivedValues.digitalValue / safeTotalNetWorth * 100).toFixed(1)
     },
     { 
       name: 'Real Estate & Alt', 
-      value: portfolioDerivedValues.alternativeValue, 
-      color: '#8b5cf6',
+      value: Math.max(800, portfolioDerivedValues.alternativeValue),
+      purchasePrice: Math.max(650, portfolioDerivedValues.alternativeValue * 0.82),
+      color: GUARDIAN_COLORS.purple,
       percentage: (portfolioDerivedValues.alternativeValue / safeTotalNetWorth * 100).toFixed(1)
     },
     { 
       name: 'Cash & Equiv.', 
-      value: portfolioDerivedValues.cashValue,
-      color: '#22c55e',
+      value: Math.max(200, portfolioDerivedValues.cashValue),
+      purchasePrice: Math.max(200, portfolioDerivedValues.cashValue),
+      color: GUARDIAN_COLORS.emerald,
       percentage: ((portfolioDerivedValues.cashValue / safeTotalNetWorth) * 100).toFixed(1)
     },
-  ]
+  ], [portfolioDerivedValues, safeTotalNetWorth])
+
+  // Comparison Data: Asset Performance Transformation (Current vs Purchase)
+  const assetPerformanceComparison = useMemo(() => 
+    compositionData.map(asset => ({
+      name: asset.name,
+      currentValue: asset.value,
+      purchasePrice: asset.purchasePrice,
+      gainLoss: asset.value - asset.purchasePrice,
+      gainLossPercent: ((asset.value - asset.purchasePrice) / asset.purchasePrice * 100).toFixed(1),
+      color: asset.color,
+    })),
+    [compositionData]
+  )
 
   // Asset type distribution
   const distributionColors = ['#3b82f6', '#f59e0b', '#8b5cf6', '#22c55e', '#ec4899', '#06b6d4']
@@ -251,7 +298,7 @@ export default function WealthAnalytics() {
     ]
   }, [portfolioItems, wellness, portfolioDerivedValues, safeTotalNetWorth])
 
-  // Health indicators radar chart
+  // Health Indicators Radar Chart Data with robust metrics
   const healthRadarData = useMemo(() => {
     if (portfolioItems.length) {
       const total = safeTotalNetWorth
@@ -263,39 +310,34 @@ export default function WealthAnalytics() {
         .reduce((sum, i) => sum + ((i.current_price ?? i.purchase_price) * i.quantity), 0)
       const positiveRatio = portfolioItems.length
         ? portfolioItems.filter(i => (i.current_price ?? i.purchase_price) >= i.purchase_price).length / portfolioItems.length
-        : 0.5
-
-      const diversification = Math.min(100, 50 + uniqueTypes * 8)
-      const liquidity = Math.min(100, Math.max(40, (cashValue / total) * 260 + 30))
-      const resilience = Math.min(100, Math.max(45, positiveRatio * 70 + (1 - maxWeight) * 30))
-      const riskManagement = Math.min(100, Math.max(20, (1 - maxWeight) * 100))
-      const goalAlignment = Math.min(100, Math.max(50, (diversification + resilience) / 2))
+        : 0.65
 
       return [
-        { metric: 'Diversification', score: diversification, fullMark: 100 },
-        { metric: 'Liquidity', score: liquidity, fullMark: 100 },
-        { metric: 'Resilience', score: resilience, fullMark: 100 },
-        { metric: 'Risk Management', score: riskManagement, fullMark: 100 },
-        { metric: 'Goal Alignment', score: goalAlignment, fullMark: 100 },
+        { metric: 'Diversification', score: Math.min(100, Math.max(45, 50 + uniqueTypes * 8)), fullMark: 100 },
+        { metric: 'Liquidity', score: Math.min(100, Math.max(35, (cashValue / total) * 280 + 25)), fullMark: 100 },
+        { metric: 'Resilience', score: Math.min(100, Math.max(40, positiveRatio * 70 + (1 - maxWeight) * 30)), fullMark: 100 },
+        { metric: 'Risk Management', score: Math.min(100, Math.max(30, (1 - maxWeight) * 100)), fullMark: 100 },
+        { metric: 'Goal Alignment', score: Math.min(100, Math.max(50, (50 + uniqueTypes * 8 + positiveRatio * 40) / 2)), fullMark: 100 },
       ]
     }
 
     const hasWellnessData = wellness.overall_score > 0
     if (hasWellnessData) {
       return [
-        { metric: 'Diversification', score: wellness.diversification.diversification_score, fullMark: 100 },
-        { metric: 'Liquidity', score: wellness.liquidity.liquidity_score, fullMark: 100 },
-        { metric: 'Resilience', score: wellness.behavioral_resilience.resilience_score, fullMark: 100 },
-        { metric: 'Risk Management', score: 100 - wellness.diversification.concentration_risk, fullMark: 100 },
-        { metric: 'Goal Alignment', score: wellness.behavioral_resilience.goal_alignment_score, fullMark: 100 },
+        { metric: 'Diversification', score: Math.max(1, wellness.diversification.diversification_score), fullMark: 100 },
+        { metric: 'Liquidity', score: Math.max(1, wellness.liquidity.liquidity_score), fullMark: 100 },
+        { metric: 'Resilience', score: Math.max(1, wellness.behavioral_resilience.resilience_score), fullMark: 100 },
+        { metric: 'Risk Management', score: Math.max(1, 100 - wellness.diversification.concentration_risk), fullMark: 100 },
+        { metric: 'Goal Alignment', score: Math.max(1, wellness.behavioral_resilience.goal_alignment_score), fullMark: 100 },
       ]
     }
 
+    // Fallback with realistic default scores
     return [
-      { metric: 'Diversification', score: 76, fullMark: 100 },
-      { metric: 'Liquidity', score: 71, fullMark: 100 },
-      { metric: 'Resilience', score: 74, fullMark: 100 },
-      { metric: 'Risk Management', score: 69, fullMark: 100 },
+      { metric: 'Diversification', score: 72, fullMark: 100 },
+      { metric: 'Liquidity', score: 68, fullMark: 100 },
+      { metric: 'Resilience', score: 75, fullMark: 100 },
+      { metric: 'Risk Management', score: 65, fullMark: 100 },
       { metric: 'Goal Alignment', score: 78, fullMark: 100 },
     ]
   }, [portfolioItems, safeTotalNetWorth, wellness])
@@ -536,8 +578,8 @@ export default function WealthAnalytics() {
                   <Radar
                     name="Score"
                     dataKey="score"
-                    stroke="#3b82f6"
-                    fill="#3b82f6"
+                    stroke={GUARDIAN_COLORS.electricBlue}
+                    fill={GUARDIAN_COLORS.electricBlue}
                     fillOpacity={0.6}
                     animationDuration={800}
                   />
@@ -558,7 +600,7 @@ export default function WealthAnalytics() {
 
       {viewMode === 'trends' && (
         <motion.div variants={containerVariants} className="space-y-6">
-          {/* Net Worth Over Time */}
+          {/* Net Worth Over Time - Guardian Electric Blue */}
           <motion.div variants={cardVariants} className="card p-8">
             <h3 className="text-lg font-bold text-white mb-6">Net Worth Over Time</h3>
             <div className="w-full h-96 bg-slate-900/20 rounded-lg">
@@ -566,8 +608,8 @@ export default function WealthAnalytics() {
                 <AreaChart data={historicalData}>
                   <defs>
                     <linearGradient id="colorNetWorth" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      <stop offset="5%" stopColor={GUARDIAN_COLORS.electricBlue} stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor={GUARDIAN_COLORS.electricBlue} stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
@@ -585,8 +627,8 @@ export default function WealthAnalytics() {
                   <Area
                     type="monotone"
                     dataKey="totalNetWorth"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
+                    stroke={GUARDIAN_COLORS.electricBlue}
+                    strokeWidth={3}
                     fillOpacity={1}
                     fill="url(#colorNetWorth)"
                     animationDuration={1000}
@@ -596,7 +638,7 @@ export default function WealthAnalytics() {
             </div>
           </motion.div>
 
-          {/* Health Scores Over Time */}
+          {/* Health Indicators Trends - Multiple Guardian Colors */}
           <motion.div variants={cardVariants} className="card p-8">
             <h3 className="text-lg font-bold text-white mb-6">Health Indicators Trends</h3>
             <div className="w-full h-96 bg-slate-900/20 rounded-lg">
@@ -618,8 +660,8 @@ export default function WealthAnalytics() {
                   <Line
                     type="monotone"
                     dataKey="wellnessScore"
-                    stroke="#8b5cf6"
-                    strokeWidth={2}
+                    stroke={GUARDIAN_COLORS.purple}
+                    strokeWidth={3}
                     name="Overall Wellness"
                     dot={false}
                     animationDuration={1000}
@@ -627,8 +669,8 @@ export default function WealthAnalytics() {
                   <Line
                     type="monotone"
                     dataKey="diversificationScore"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
+                    stroke={GUARDIAN_COLORS.electricBlue}
+                    strokeWidth={2.5}
                     name="Diversification"
                     dot={false}
                     animationDuration={1000}
@@ -636,8 +678,8 @@ export default function WealthAnalytics() {
                   <Line
                     type="monotone"
                     dataKey="liquidityScore"
-                    stroke="#22c55e"
-                    strokeWidth={2}
+                    stroke={GUARDIAN_COLORS.emerald}
+                    strokeWidth={2.5}
                     name="Liquidity"
                     dot={false}
                     animationDuration={1000}
@@ -645,8 +687,8 @@ export default function WealthAnalytics() {
                   <Line
                     type="monotone"
                     dataKey="resilienceScore"
-                    stroke="#f59e0b"
-                    strokeWidth={2}
+                    stroke={GUARDIAN_COLORS.amber}
+                    strokeWidth={2.5}
                     name="Resilience"
                     dot={false}
                     animationDuration={1000}
@@ -656,12 +698,26 @@ export default function WealthAnalytics() {
             </div>
           </motion.div>
 
-          {/* Asset Allocation Over Time */}
+          {/* Asset Allocation Trends - Stacked with Guardian Palette */}
           <motion.div variants={cardVariants} className="card p-8">
             <h3 className="text-lg font-bold text-white mb-6">Asset Allocation Trends</h3>
             <div className="w-full h-96 bg-slate-900/20 rounded-lg">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={historicalData}>
+                  <defs>
+                    <linearGradient id="colorTraditional" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={GUARDIAN_COLORS.electricBlue} stopOpacity={0.9}/>
+                      <stop offset="95%" stopColor={GUARDIAN_COLORS.electricBlue} stopOpacity={0.3}/>
+                    </linearGradient>
+                    <linearGradient id="colorDigital" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={GUARDIAN_COLORS.amber} stopOpacity={0.9}/>
+                      <stop offset="95%" stopColor={GUARDIAN_COLORS.amber} stopOpacity={0.3}/>
+                    </linearGradient>
+                    <linearGradient id="colorAlternative" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={GUARDIAN_COLORS.purple} stopOpacity={0.9}/>
+                      <stop offset="95%" stopColor={GUARDIAN_COLORS.purple} stopOpacity={0.3}/>
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
                   <XAxis dataKey="date" stroke="#94a3b8" style={{ fontSize: '12px' }} />
                   <YAxis stroke="#94a3b8" style={{ fontSize: '12px' }} tickFormatter={formatCurrency} />
@@ -679,9 +735,9 @@ export default function WealthAnalytics() {
                     type="monotone"
                     dataKey="traditionalValue"
                     stackId="1"
-                    stroke="#3b82f6"
-                    fill="#3b82f6"
-                    fillOpacity={0.8}
+                    stroke={GUARDIAN_COLORS.electricBlue}
+                    fill="url(#colorTraditional)"
+                    strokeWidth={2}
                     name="Traditional"
                     animationDuration={1000}
                   />
@@ -689,9 +745,9 @@ export default function WealthAnalytics() {
                     type="monotone"
                     dataKey="digitalValue"
                     stackId="1"
-                    stroke="#f59e0b"
-                    fill="#f59e0b"
-                    fillOpacity={0.8}
+                    stroke={GUARDIAN_COLORS.amber}
+                    fill="url(#colorDigital)"
+                    strokeWidth={2}
                     name="Digital"
                     animationDuration={1000}
                   />
@@ -699,9 +755,9 @@ export default function WealthAnalytics() {
                     type="monotone"
                     dataKey="alternativeValue"
                     stackId="1"
-                    stroke="#8b5cf6"
-                    fill="#8b5cf6"
-                    fillOpacity={0.8}
+                    stroke={GUARDIAN_COLORS.purple}
+                    fill="url(#colorAlternative)"
+                    strokeWidth={2}
                     name="Alternative"
                     animationDuration={1000}
                   />
@@ -714,13 +770,13 @@ export default function WealthAnalytics() {
 
       {viewMode === 'comparison' && (
         <motion.div variants={containerVariants} className="space-y-6">
-          {/* Asset Performance Comparison */}
+          {/* Asset Performance Comparison - Current vs Purchase Price */}
           <motion.div variants={cardVariants} className="card p-8">
-            <h3 className="text-lg font-bold text-white mb-6">Asset Class Performance</h3>
+            <h3 className="text-lg font-bold text-white mb-6">Asset Class Performance Comparison</h3>
             <div className="w-full h-96 bg-slate-900/20 rounded-lg">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={compositionData}
+                  data={assetPerformanceComparison}
                   margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
@@ -743,11 +799,20 @@ export default function WealthAnalytics() {
                     formatter={(value: number) => formatCurrency(value)}
                   />
                   <Legend />
-                  <Bar dataKey="value" fill="#3b82f6" radius={[8, 8, 0, 0]} animationDuration={800} name="Value">
-                    {compositionData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
+                  <Bar 
+                    dataKey="currentValue" 
+                    fill={GUARDIAN_COLORS.emerald} 
+                    radius={[8, 8, 0, 0]} 
+                    animationDuration={800} 
+                    name="Current Value"
+                  />
+                  <Bar 
+                    dataKey="purchasePrice" 
+                    fill={GUARDIAN_COLORS.slate} 
+                    radius={[8, 8, 0, 0]} 
+                    animationDuration={800} 
+                    name="Purchase Price"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -775,21 +840,33 @@ export default function WealthAnalytics() {
                     }}
                     formatter={(value: number) => `${value.toFixed(1)}/100`}
                   />
-                  <Bar dataKey="score" fill="#3b82f6" radius={[0, 8, 8, 0]} animationDuration={800} name="Score" />
+                  <Bar dataKey="score" fill={GUARDIAN_COLORS.electricBlue} radius={[0, 8, 8, 0]} animationDuration={800} name="Score" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </motion.div>
 
-          {/* Performance Over Time */}
+          {/* Asset Allocation vs Wellness Correlation */}
           <motion.div variants={cardVariants} className="card p-8">
-            <h3 className="text-lg font-bold text-white mb-6">Asset vs Health Score Trends</h3>
+            <h3 className="text-lg font-bold text-white mb-6">Net Worth vs Wellness Score Correlation</h3>
             <div className="w-full h-96 bg-slate-900/20 rounded-lg">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={historicalData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
                   <XAxis dataKey="date" stroke="#94a3b8" style={{ fontSize: '12px' }} />
-                  <YAxis stroke="#94a3b8" style={{ fontSize: '12px' }} />
+                  <YAxis 
+                    yAxisId="left"
+                    stroke="#94a3b8" 
+                    style={{ fontSize: '12px' }}
+                    tickFormatter={formatCurrency}
+                  />
+                  <YAxis 
+                    yAxisId="right"
+                    orientation="right"
+                    stroke="#94a3b8" 
+                    style={{ fontSize: '12px' }}
+                    domain={[0, 100]}
+                  />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: 'rgba(15, 23, 42, 0.95)',
@@ -797,15 +874,25 @@ export default function WealthAnalytics() {
                       borderRadius: '12px',
                       color: '#fff',
                     }}
-                    formatter={(value: number) => `$${value.toLocaleString()}`}
                   />
                   <Legend />
                   <Line
+                    yAxisId="left"
                     type="monotone"
                     dataKey="totalNetWorth"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
+                    stroke={GUARDIAN_COLORS.electricBlue}
+                    strokeWidth={3}
                     name="Net Worth"
+                    dot={false}
+                    animationDuration={1000}
+                  />
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="wellnessScore"
+                    stroke={GUARDIAN_COLORS.emerald}
+                    strokeWidth={3}
+                    name="Wellness Score"
                     dot={false}
                     animationDuration={1000}
                   />
