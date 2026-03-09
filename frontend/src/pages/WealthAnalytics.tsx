@@ -47,6 +47,7 @@ export default function WealthAnalytics() {
   const { isLoading, wellness, unifiedWallet } = useWealthHubData()
   const [timeRange, setTimeRange] = useState<TimeRange>('6m')
   const [viewMode, setViewMode] = useState<ViewMode>('composition')
+  const safeTotalNetWorth = unifiedWallet.totalNetWorth > 0 ? unifiedWallet.totalNetWorth : 1
 
   // Generate historical data for time-series (realistic demo data)
   const historicalData = useMemo(() => {
@@ -106,33 +107,34 @@ export default function WealthAnalytics() {
       name: 'Stocks & Bonds', 
       value: unifiedWallet.traditionalValue, 
       color: '#3b82f6',
-      percentage: (unifiedWallet.traditionalValue / unifiedWallet.totalNetWorth * 100).toFixed(1)
+      percentage: (unifiedWallet.traditionalValue / safeTotalNetWorth * 100).toFixed(1)
     },
     { 
       name: 'Cryptocurrency', 
       value: unifiedWallet.digitalValue, 
       color: '#f59e0b',
-      percentage: (unifiedWallet.digitalValue / unifiedWallet.totalNetWorth * 100).toFixed(1)
+      percentage: (unifiedWallet.digitalValue / safeTotalNetWorth * 100).toFixed(1)
     },
     { 
       name: 'Real Estate & Alt', 
       value: unifiedWallet.alternativeValue, 
       color: '#8b5cf6',
-      percentage: (unifiedWallet.alternativeValue / unifiedWallet.totalNetWorth * 100).toFixed(1)
+      percentage: (unifiedWallet.alternativeValue / safeTotalNetWorth * 100).toFixed(1)
     },
     { 
       name: 'Cash & Equiv.', 
       value: Math.max(0, unifiedWallet.totalNetWorth - unifiedWallet.traditionalValue - unifiedWallet.digitalValue - unifiedWallet.alternativeValue), 
       color: '#22c55e',
-      percentage: ((Math.max(0, unifiedWallet.totalNetWorth - unifiedWallet.traditionalValue - unifiedWallet.digitalValue - unifiedWallet.alternativeValue) / unifiedWallet.totalNetWorth) * 100).toFixed(1)
+      percentage: ((Math.max(0, unifiedWallet.totalNetWorth - unifiedWallet.traditionalValue - unifiedWallet.digitalValue - unifiedWallet.alternativeValue) / safeTotalNetWorth) * 100).toFixed(1)
     },
   ]
 
   // Asset type distribution
-  const assetDistribution = Object.entries(wellness.diversification.asset_type_distribution).map(([name, value]) => ({
+  const distributionColors = ['#3b82f6', '#f59e0b', '#8b5cf6', '#22c55e', '#ec4899', '#06b6d4']
+  const assetDistribution = Object.entries(wellness.diversification.asset_type_distribution).map(([name, value], index) => ({
     name: name.replace('_', ' ').toUpperCase(),
     value,
-    color: ['#3b82f6', '#f59e0b', '#8b5cf6', '#22c55e', '#ec4899', '#06b6d4'][Math.floor(Math.random() * 6)]
+    color: distributionColors[index % distributionColors.length]
   }))
 
   // Health indicators radar chart
@@ -148,7 +150,7 @@ export default function WealthAnalytics() {
   const firstValue = historicalData[0]?.totalNetWorth || 0
   const lastValue = historicalData[historicalData.length - 1]?.totalNetWorth || 0
   const growthAmount = lastValue - firstValue
-  const growthPercent = (growthAmount / firstValue) * 100
+  const growthPercent = firstValue > 0 ? (growthAmount / firstValue) * 100 : 0
 
   if (isLoading) {
     return <div className="py-8 text-center text-slate-300">Loading Analytics...</div>
