@@ -585,7 +585,7 @@ export default function WealthAnalytics() {
           {/* Health Radar Chart */}
           <motion.div variants={cardVariants} className="col-span-12 card p-8">
             <h3 className="text-lg font-bold text-white mb-6">Financial Health Indicators</h3>
-            <div className="h-96">
+            <div style={{ height: '384px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={healthRadarData}>
                   <PolarGrid stroke="rgba(255, 255, 255, 0.1)" />
