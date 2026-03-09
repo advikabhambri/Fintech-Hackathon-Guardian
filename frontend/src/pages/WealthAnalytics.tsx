@@ -77,7 +77,7 @@ export default function WealthAnalytics() {
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([])
   const [portfolioLoading, setPortfolioLoading] = useState(true)
   const [timeRange, setTimeRange] = useState<TimeRange>('6m')
-  const [viewMode, setViewMode] = useState<ViewMode>('composition')
+  const [viewMode, setViewMode] = useState<ViewMode>('trends')
 
   const fetchPortfolioItems = async () => {
     try {
