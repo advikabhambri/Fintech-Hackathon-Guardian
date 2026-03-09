@@ -10,7 +10,8 @@ from core.config import settings
 from db.database import get_db
 from models.user import User
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Use Argon2 instead of bcrypt for better compatibility
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 

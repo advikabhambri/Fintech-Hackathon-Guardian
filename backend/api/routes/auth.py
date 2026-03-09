@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 
 from db.database import get_db
-from schemas.user import UserCreate, UserResponse, Token, UserLogin
+from schemas.user import UserCreate, UserResponse, Token, UserLogin, UserUpdate
 from models.user import User
 from core.security import (
     get_password_hash,
@@ -77,4 +77,31 @@ async def login(user: UserLogin, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(current_user: User = Depends(get_current_user)):
+    return current_user
+
+@router.put("/me", response_model=UserResponse)
+async def update_current_user(
+    user_update: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # Check if new username is already taken by another user
+    if user_update.username and user_update.username != current_user.username:
+        existing_user = db.query(User).filter(User.username == user_update.username).first()
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username already taken"
+            )
+    
+    # Update user fields
+    if user_update.full_name is not None:
+        current_user.full_name = user_update.full_name
+    if user_update.username is not None:
+        current_user.username = user_update.username
+    
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
+    
     return current_user

@@ -18,6 +18,14 @@ class UserLogin(BaseModel):
     password: str
 
 
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    username: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
+
+
 class UserResponse(UserBase):
     id: int
     is_active: bool

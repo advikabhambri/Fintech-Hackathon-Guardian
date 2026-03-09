@@ -1,11 +1,12 @@
 from pydantic_settings import BaseSettings
 from typing import List
 import json
+import os
 
 
 class Settings(BaseSettings):
-    # Database
-    DATABASE_URL: str = "postgresql://wealth_user:wealth_pass@db:5432/wealth_wellness_db"
+    # Database (use SQLite for local development, PostgreSQL for production)
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./wealth_wellness.db")
     
     # JWT
     SECRET_KEY: str = "your-secret-key-change-this"
