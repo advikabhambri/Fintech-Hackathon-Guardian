@@ -619,7 +619,7 @@ export default function WealthAnalytics() {
           {/* Net Worth Over Time - Guardian Electric Blue */}
           <motion.div variants={cardVariants} className="card p-8">
             <h3 className="text-lg font-bold text-white mb-6">Net Worth Over Time</h3>
-            <div className="w-full h-96 bg-slate-900/20 rounded-lg">
+            <div className="w-full" style={{ height: '384px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={historicalData}>
                   <defs>
@@ -657,7 +657,7 @@ export default function WealthAnalytics() {
           {/* Health Indicators Trends - Multiple Guardian Colors */}
           <motion.div variants={cardVariants} className="card p-8">
             <h3 className="text-lg font-bold text-white mb-6">Health Indicators Trends</h3>
-            <div className="w-full h-96 bg-slate-900/20 rounded-lg">
+            <div className="w-full" style={{ height: '384px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={historicalData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
@@ -717,7 +717,7 @@ export default function WealthAnalytics() {
           {/* Asset Allocation Trends - Stacked with Guardian Palette */}
           <motion.div variants={cardVariants} className="card p-8">
             <h3 className="text-lg font-bold text-white mb-6">Asset Allocation Trends</h3>
-            <div className="w-full h-96 bg-slate-900/20 rounded-lg">
+            <div className="w-full" style={{ height: '384px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={historicalData}>
                   <defs>
