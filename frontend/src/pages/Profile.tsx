@@ -217,10 +217,14 @@ export default function Profile() {
               <p className="text-sm text-white font-mono">{user?.id || 'N/A'}</p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-wide text-slate-400 mb-1">Last Updated</p>
+              <p className="text-xs uppercase tracking-wide text-slate-400 mb-1">Member Since</p>
               <p className="text-sm text-white">
                 {user?.created_at
-                  ? new Date(user.created_at).toLocaleDateString()
+                  ? new Date(user.created_at).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })
                   : 'N/A'}
               </p>
             </div>

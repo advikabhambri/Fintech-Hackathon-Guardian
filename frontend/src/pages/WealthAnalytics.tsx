@@ -48,58 +48,83 @@ export default function WealthAnalytics() {
   const [timeRange, setTimeRange] = useState<TimeRange>('6m')
   const [viewMode, setViewMode] = useState<ViewMode>('composition')
 
-  // Generate historical data for time-series (mock data for demo)
+  // Generate historical data for time-series (realistic demo data)
   const historicalData = useMemo(() => {
     const months = timeRange === '7d' ? 7 : timeRange === '1m' ? 30 : timeRange === '3m' ? 90 : timeRange === '6m' ? 180 : timeRange === '1y' ? 365 : 730
     const data = []
-    const baseValue = unifiedWallet.totalNetWorth * 0.85
+    const baseValue = unifiedWallet.totalNetWorth * 0.75
     
+    // Generate more realistic market cycles
     for (let i = 0; i < months; i++) {
+      const normalizedProgress = i / months
+      
+      // Market cycle with some volatility and trend
+      const marketCycle = Math.sin(normalizedProgress * Math.PI * 4) * 0.08 // Market ups and downs
+      const uptrend = normalizedProgress * 0.25 // Overall uptrend of 25%
+      const randomWalk = Math.random() * 0.04 - 0.02 // Random daily movements
+      
+      // Calculate values with realistic variations
+      const totalMultiplier = 1 + marketCycle + uptrend + randomWalk
+      const totalNetWorth = baseValue * totalMultiplier
+      
+      // Traditional assets: less volatile, steadier growth
+      const traditionalVolatility = Math.sin(normalizedProgress * Math.PI * 3) * 0.02 + uptrend * 0.6
+      const traditionalValue = unifiedWallet.traditionalValue * 0.85 * (1 + traditionalVolatility + Math.random() * 0.01)
+      
+      // Digital assets: more volatile, higher growth potential
+      const digitalVolatility = Math.sin(normalizedProgress * Math.PI * 5) * 0.15 + uptrend * 1.2
+      const digitalValue = unifiedWallet.digitalValue * 0.8 * (1 + digitalVolatility + Math.random() * 0.03)
+      
+      // Alternative: stable middle ground
+      const alternativeValue = unifiedWallet.alternativeValue * (1 + uptrend * 0.8 + Math.random() * 0.02)
+      
+      // Wellness scores that improve slightly over time with some variation
+      const baseWellness = 70 + normalizedProgress * 15
+      const wellnessScore = Math.min(100, Math.max(60, baseWellness + Math.sin(normalizedProgress * Math.PI * 2) * 5 + Math.random() * 3))
+      
       const date = new Date()
       date.setDate(date.getDate() - (months - i))
-      const growth = (i / months) * 0.15
-      const volatility = Math.sin(i / 10) * 0.03
       
       data.push({
         date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        totalNetWorth: baseValue * (1 + growth + volatility),
-        traditionalValue: baseValue * 0.55 * (1 + growth + volatility * 0.8),
-        digitalValue: baseValue * 0.25 * (1 + growth + volatility * 1.5),
-        alternativeValue: baseValue * 0.20 * (1 + growth + volatility * 1.2),
-        wellnessScore: Math.min(100, Math.max(60, wellness.overall_score - 15 + (i / months) * 20 + Math.random() * 5)),
-        diversificationScore: Math.min(100, wellness.diversification.diversification_score + Math.random() * 10 - 5),
-        liquidityScore: Math.min(100, wellness.liquidity.liquidity_score + Math.random() * 10 - 5),
-        resilienceScore: Math.min(100, wellness.behavioral_resilience.resilience_score + Math.random() * 10 - 5),
+        totalNetWorth: parseFloat(totalNetWorth.toFixed(2)),
+        traditionalValue: parseFloat(traditionalValue.toFixed(2)),
+        digitalValue: parseFloat(digitalValue.toFixed(2)),
+        alternativeValue: parseFloat(alternativeValue.toFixed(2)),
+        wellnessScore: parseFloat(wellnessScore.toFixed(1)),
+        diversificationScore: Math.min(100, Math.max(70, 82 + Math.sin(normalizedProgress * Math.PI) * 8 + (Math.random() - 0.5) * 4)),
+        liquidityScore: Math.min(100, Math.max(65, 75 + Math.cos(normalizedProgress * Math.PI * 2) * 10 + (Math.random() - 0.5) * 3)),
+        resilienceScore: Math.min(100, Math.max(60, 78 + normalizedProgress * 10 + (Math.random() - 0.5) * 5)),
       })
     }
     return data
-  }, [timeRange, unifiedWallet.totalNetWorth, wellness])
+  }, [timeRange, unifiedWallet.totalNetWorth, unifiedWallet.traditionalValue, unifiedWallet.digitalValue, unifiedWallet.alternativeValue])
 
   // Wealth composition for pie chart
   const compositionData = [
     { 
-      name: 'Traditional Assets', 
+      name: 'Stocks & Bonds', 
       value: unifiedWallet.traditionalValue, 
       color: '#3b82f6',
       percentage: (unifiedWallet.traditionalValue / unifiedWallet.totalNetWorth * 100).toFixed(1)
     },
     { 
-      name: 'Digital Assets', 
+      name: 'Cryptocurrency', 
       value: unifiedWallet.digitalValue, 
       color: '#f59e0b',
       percentage: (unifiedWallet.digitalValue / unifiedWallet.totalNetWorth * 100).toFixed(1)
     },
     { 
-      name: 'Alternative Assets', 
+      name: 'Real Estate & Alt', 
       value: unifiedWallet.alternativeValue, 
       color: '#8b5cf6',
       percentage: (unifiedWallet.alternativeValue / unifiedWallet.totalNetWorth * 100).toFixed(1)
     },
     { 
-      name: 'Cash & Equivalents', 
-      value: unifiedWallet.totalNetWorth * 0.12, 
+      name: 'Cash & Equiv.', 
+      value: Math.max(0, unifiedWallet.totalNetWorth - unifiedWallet.traditionalValue - unifiedWallet.digitalValue - unifiedWallet.alternativeValue), 
       color: '#22c55e',
-      percentage: '12.0'
+      percentage: ((Math.max(0, unifiedWallet.totalNetWorth - unifiedWallet.traditionalValue - unifiedWallet.digitalValue - unifiedWallet.alternativeValue) / unifiedWallet.totalNetWorth) * 100).toFixed(1)
     },
   ]
 
