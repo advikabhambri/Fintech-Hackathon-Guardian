@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Shield, 
   Bell, 
@@ -21,6 +21,11 @@ export default function Settings() {
 
   const [localSettings, setLocalSettings] = useState(settings)
   const [savedMessage, setSavedMessage] = useState(false)
+
+  // Sync local settings with store settings
+  useEffect(() => {
+    setLocalSettings(settings)
+  }, [settings])
 
   const handleSave = () => {
     updateSettings(localSettings)
@@ -78,7 +83,7 @@ export default function Settings() {
             {/* Toggle Switch */}
             <button
               onClick={toggleCalmMode}
-              className={`relative w-16 h-8 rounded-full transition-colors duration-300 flex-shrink-0 ${
+              className={`relative w-16 h-8 rounded-full transition-all duration-300 flex-shrink-0 ${
                 isEnabled ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gray-700'
               }`}
             >
@@ -92,13 +97,15 @@ export default function Settings() {
         </motion.div>
 
         {/* Settings Panels */}
-        {isEnabled && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="space-y-6"
-          >
+        <AnimatePresence>
+          {isEnabled && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="space-y-6"
+            >
             {/* Impulse Alert Settings */}
             <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl border border-gray-700/50 rounded-xl p-6">
               <div className="flex items-center gap-3 mb-4">
@@ -208,14 +215,18 @@ export default function Settings() {
                     </p>
                   </div>
                   <button
-                    onClick={() => setLocalSettings({ ...localSettings, showRealityChecks: !localSettings.showRealityChecks })}
-                    className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
+                    onClick={() => {
+                      const newValue = !localSettings.showRealityChecks
+                      setLocalSettings({ ...localSettings, showRealityChecks: newValue })
+                      updateSettings({ showRealityChecks: newValue })
+                    }}
+                    className={`relative w-16 h-8 rounded-full transition-all duration-300 flex-shrink-0 ${
                       localSettings.showRealityChecks ? 'bg-gradient-to-r from-cyan-500 to-blue-500' : 'bg-gray-700'
                     }`}
                   >
                     <motion.div
-                      className="absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-lg"
-                      animate={{ x: localSettings.showRealityChecks ? 28 : 0 }}
+                      className="absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-lg"
+                      animate={{ x: localSettings.showRealityChecks ? 32 : 0 }}
                       transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                     />
                   </button>
@@ -261,6 +272,7 @@ export default function Settings() {
             </div>
           </motion.div>
         )}
+        </AnimatePresence>
       </motion.div>
     </div>
   )

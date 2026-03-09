@@ -167,7 +167,7 @@ export default function Portfolio() {
       
       {/* Calm Mode Widget - Full View */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <CalmModeWidget variant="compact" />
+        <CalmModeWidget variant="compact" showVolatilityShield={false} />
       </div>
       
           <h1 className="text-2xl font-bold text-white">Portfolio</h1>

@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { User, LayoutDashboard, Wallet, Target, TrendingUp } from 'lucide-react'
+import { User, LayoutDashboard, Wallet, Target, TrendingUp, Settings } from 'lucide-react'
 import BrandLogo from './BrandLogo'
 
 const navItems = [
@@ -7,6 +7,7 @@ const navItems = [
   { to: '/portfolio', icon: Wallet, label: 'Portfolio' },
   { to: '/analytics', icon: TrendingUp, label: 'Analytics' },
   { to: '/goals', icon: Target, label: 'Goals' },
+  { to: '/settings', icon: Settings, label: 'Settings' },
 ]
 
 export default function Navbar() {
