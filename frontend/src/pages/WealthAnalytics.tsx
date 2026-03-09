@@ -160,7 +160,7 @@ export default function WealthAnalytics() {
         {/* View Mode & Time Range Selector */}
         <div className="flex items-center justify-between">
           {/* View Mode Tabs */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 bg-white/5 p-1 rounded-lg border border-white/10">
             {[
               { id: 'composition' as ViewMode, label: 'Composition', icon: PieChartIcon },
               { id: 'trends' as ViewMode, label: 'Trends', icon: LineChartIcon },
@@ -171,16 +171,16 @@ export default function WealthAnalytics() {
                 <motion.button
                   key={mode.id}
                   onClick={() => setViewMode(mode.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-md transition-all font-semibold text-sm ${
                     viewMode === mode.id
-                      ? 'bg-blue-500/20 text-blue-300 border border-blue-400/30'
-                      : 'bg-white/5 text-slate-400 border border-white/5 hover:bg-white/10'
+                      ? 'bg-blue-500 text-white shadow-lg'
+                      : 'text-slate-300 hover:text-white hover:bg-white/10'
                   }`}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <Icon className="h-4 w-4" />
-                  <span className="text-sm font-medium">{mode.label}</span>
+                  <span>{mode.label}</span>
                 </motion.button>
               )
             })}
@@ -373,11 +373,11 @@ export default function WealthAnalytics() {
       )}
 
       {viewMode === 'trends' && (
-        <div className="space-y-6">
+        <motion.div variants={containerVariants} className="space-y-6">
           {/* Net Worth Over Time */}
           <motion.div variants={cardVariants} className="card p-8">
             <h3 className="text-lg font-bold text-white mb-6">Net Worth Over Time</h3>
-            <div className="h-96">
+            <div className="w-full h-96 bg-slate-900/20 rounded-lg">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={historicalData}>
                   <defs>
@@ -415,7 +415,7 @@ export default function WealthAnalytics() {
           {/* Health Scores Over Time */}
           <motion.div variants={cardVariants} className="card p-8">
             <h3 className="text-lg font-bold text-white mb-6">Health Indicators Trends</h3>
-            <div className="h-96">
+            <div className="w-full h-96 bg-slate-900/20 rounded-lg">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={historicalData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
@@ -428,6 +428,7 @@ export default function WealthAnalytics() {
                       borderRadius: '12px',
                       color: '#fff',
                     }}
+                    formatter={(value: number) => `${value.toFixed(1)}`}
                   />
                   <Legend />
                   <Line
@@ -474,7 +475,7 @@ export default function WealthAnalytics() {
           {/* Asset Allocation Over Time */}
           <motion.div variants={cardVariants} className="card p-8">
             <h3 className="text-lg font-bold text-white mb-6">Asset Allocation Trends</h3>
-            <div className="h-96">
+            <div className="w-full h-96 bg-slate-900/20 rounded-lg">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={historicalData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
@@ -524,19 +525,29 @@ export default function WealthAnalytics() {
               </ResponsiveContainer>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       )}
 
       {viewMode === 'comparison' && (
-        <div className="space-y-6">
+        <motion.div variants={containerVariants} className="space-y-6">
           {/* Asset Performance Comparison */}
           <motion.div variants={cardVariants} className="card p-8">
             <h3 className="text-lg font-bold text-white mb-6">Asset Class Performance</h3>
-            <div className="h-96">
+            <div className="w-full h-96 bg-slate-900/20 rounded-lg">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={compositionData}>
+                <BarChart
+                  data={compositionData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
-                  <XAxis dataKey="name" stroke="#94a3b8" style={{ fontSize: '12px' }} />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="#94a3b8" 
+                    style={{ fontSize: '12px' }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={100}
+                  />
                   <YAxis stroke="#94a3b8" style={{ fontSize: '12px' }} tickFormatter={formatCurrency} />
                   <Tooltip
                     contentStyle={{
@@ -547,7 +558,8 @@ export default function WealthAnalytics() {
                     }}
                     formatter={(value: number) => formatCurrency(value)}
                   />
-                  <Bar dataKey="value" fill="#3b82f6" radius={[8, 8, 0, 0]} animationDuration={800}>
+                  <Legend />
+                  <Bar dataKey="value" fill="#3b82f6" radius={[8, 8, 0, 0]} animationDuration={800} name="Value">
                     {compositionData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
@@ -557,15 +569,19 @@ export default function WealthAnalytics() {
             </div>
           </motion.div>
 
-          {/* Health Metrics Comparison */}
+          {/* Health Metrics Comparison - Horizontal Bar Chart */}
           <motion.div variants={cardVariants} className="card p-8">
             <h3 className="text-lg font-bold text-white mb-6">Health Metrics Comparison</h3>
-            <div className="h-96">
+            <div className="w-full h-80 bg-slate-900/20 rounded-lg">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={healthRadarData} layout="horizontal">
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
+                <BarChart
+                  data={healthRadarData}
+                  layout="vertical"
+                  margin={{ top: 20, right: 30, left: 140, bottom: 20 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" horizontal={false} />
                   <XAxis type="number" domain={[0, 100]} stroke="#94a3b8" style={{ fontSize: '12px' }} />
-                  <YAxis type="category" dataKey="metric" stroke="#94a3b8" style={{ fontSize: '12px' }} width={120} />
+                  <YAxis type="category" dataKey="metric" stroke="#94a3b8" style={{ fontSize: '12px' }} width={130} />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: 'rgba(15, 23, 42, 0.95)',
@@ -573,13 +589,47 @@ export default function WealthAnalytics() {
                       borderRadius: '12px',
                       color: '#fff',
                     }}
+                    formatter={(value: number) => `${value.toFixed(1)}/100`}
                   />
-                  <Bar dataKey="score" fill="#3b82f6" radius={[0, 8, 8, 0]} animationDuration={800} />
+                  <Bar dataKey="score" fill="#3b82f6" radius={[0, 8, 8, 0]} animationDuration={800} name="Score" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </motion.div>
-        </div>
+
+          {/* Performance Over Time */}
+          <motion.div variants={cardVariants} className="card p-8">
+            <h3 className="text-lg font-bold text-white mb-6">Asset vs Health Score Trends</h3>
+            <div className="w-full h-96 bg-slate-900/20 rounded-lg">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={historicalData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
+                  <XAxis dataKey="date" stroke="#94a3b8" style={{ fontSize: '12px' }} />
+                  <YAxis stroke="#94a3b8" style={{ fontSize: '12px' }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '12px',
+                      color: '#fff',
+                    }}
+                    formatter={(value: number) => `$${value.toLocaleString()}`}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="totalNetWorth"
+                    stroke="#3b82f6"
+                    strokeWidth={2}
+                    name="Net Worth"
+                    dot={false}
+                    animationDuration={1000}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </motion.div>
+        </motion.div>
       )}
 
       {/* Personalized Insights Section - Always Visible */}
