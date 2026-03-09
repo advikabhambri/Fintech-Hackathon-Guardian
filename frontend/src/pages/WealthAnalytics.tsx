@@ -145,6 +145,9 @@ export default function WealthAnalytics() {
 
   const safeTotalNetWorth = portfolioDerivedValues.totalNetWorth > 0 ? portfolioDerivedValues.totalNetWorth : 1
 
+  console.log('Portfolio Derived Values:', portfolioDerivedValues)
+  console.log('Safe Total Net Worth:', safeTotalNetWorth)
+
   // Generate Mock Historical Data: 6+ months of trends with robust values
   const historicalData = useMemo(() => {
     const periods = timeRange === '7d' ? 7 : timeRange === '1m' ? 30 : timeRange === '3m' ? 90 : timeRange === '6m' ? 180 : timeRange === '1y' ? 365 : 730
@@ -787,7 +790,7 @@ export default function WealthAnalytics() {
           <motion.div variants={cardVariants} className="card p-8">
             <h3 className="text-lg font-bold text-white mb-6">Asset Class Performance Comparison</h3>
             {assetPerformanceComparison.length > 0 ? (
-              <div className="w-full h-96 bg-slate-900/20 rounded-lg p-4">
+              <div className="w-full" style={{ height: '384px' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={assetPerformanceComparison}
@@ -841,7 +844,7 @@ export default function WealthAnalytics() {
           <motion.div variants={cardVariants} className="card p-8">
             <h3 className="text-lg font-bold text-white mb-6">Health Metrics Comparison</h3>
             {healthRadarData.length > 0 ? (
-              <div className="w-full h-80 bg-slate-900/20 rounded-lg p-4">
+              <div className="w-full" style={{ height: '320px' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={healthRadarData}
@@ -875,7 +878,7 @@ export default function WealthAnalytics() {
           <motion.div variants={cardVariants} className="card p-8">
             <h3 className="text-lg font-bold text-white mb-6">Net Worth vs Wellness Score Correlation</h3>
             {historicalData.length > 0 ? (
-              <div className="w-full h-96 bg-slate-900/20 rounded-lg p-4">
+              <div className="w-full" style={{ height: '384px' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={historicalData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
