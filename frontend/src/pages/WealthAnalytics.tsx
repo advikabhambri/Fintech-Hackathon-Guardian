@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, AreaChart, Area, BarChart, Bar, Legend, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts'
 import {
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { useWealthHubData } from '../hooks/useWealthHubData'
 import PersonalizedInsights from '../components/PersonalizedInsights'
+import api from '../lib/api'
 
 const containerVariants = {
   hidden: { opacity: 0, y: 16 },
@@ -33,6 +34,15 @@ const cardVariants = {
 type TimeRange = '7d' | '1m' | '3m' | '6m' | '1y' | 'all'
 type ViewMode = 'composition' | 'trends' | 'comparison'
 
+interface PortfolioItem {
+  id: number
+  asset_name: string
+  asset_type: string
+  quantity: number
+  purchase_price: number
+  current_price: number | null
+}
+
 function formatCurrency(value: number) {
   if (value >= 1000000) {
     return `$${(value / 1000000).toFixed(1)}M`
@@ -45,43 +55,109 @@ function formatCurrency(value: number) {
 
 export default function WealthAnalytics() {
   const { isLoading, wellness, unifiedWallet } = useWealthHubData()
+  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([])
+  const [portfolioLoading, setPortfolioLoading] = useState(true)
   const [timeRange, setTimeRange] = useState<TimeRange>('6m')
   const [viewMode, setViewMode] = useState<ViewMode>('composition')
-  const safeTotalNetWorth = unifiedWallet.totalNetWorth > 0 ? unifiedWallet.totalNetWorth : 1
 
-  // Generate historical data for time-series (realistic demo data)
+  useEffect(() => {
+    const fetchPortfolioItems = async () => {
+      try {
+        const response = await api.get<PortfolioItem[]>('/api/portfolio/')
+        setPortfolioItems(response.data || [])
+      } catch (error) {
+        console.error('Failed to fetch portfolio items for analytics:', error)
+        setPortfolioItems([])
+      } finally {
+        setPortfolioLoading(false)
+      }
+    }
+
+    fetchPortfolioItems()
+  }, [])
+
+  const portfolioDerivedValues = useMemo(() => {
+    if (!portfolioItems.length) {
+      return {
+        hasPortfolioData: false,
+        totalNetWorth: unifiedWallet.totalNetWorth,
+        traditionalValue: unifiedWallet.traditionalValue,
+        digitalValue: unifiedWallet.digitalValue,
+        alternativeValue: unifiedWallet.alternativeValue,
+        cashValue: Math.max(0, unifiedWallet.totalNetWorth - unifiedWallet.traditionalValue - unifiedWallet.digitalValue - unifiedWallet.alternativeValue),
+      }
+    }
+
+    const currentValue = (item: PortfolioItem) => (item.current_price ?? item.purchase_price) * item.quantity
+
+    let traditionalValue = 0
+    let digitalValue = 0
+    let alternativeValue = 0
+    let cashValue = 0
+
+    portfolioItems.forEach((item) => {
+      const value = currentValue(item)
+      if (['stocks', 'bonds', 'etf', 'mutual_funds'].includes(item.asset_type)) {
+        traditionalValue += value
+      } else if (item.asset_type === 'crypto') {
+        digitalValue += value
+      } else if (item.asset_type === 'cash') {
+        cashValue += value
+      } else {
+        alternativeValue += value
+      }
+    })
+
+    const totalNetWorth = traditionalValue + digitalValue + alternativeValue + cashValue
+
+    return {
+      hasPortfolioData: true,
+      totalNetWorth,
+      traditionalValue,
+      digitalValue,
+      alternativeValue,
+      cashValue,
+    }
+  }, [portfolioItems, unifiedWallet])
+
+  const safeTotalNetWorth = portfolioDerivedValues.totalNetWorth > 0 ? portfolioDerivedValues.totalNetWorth : 1
+
+  // Generate historical data for time-series from portfolio/sample assets
   const historicalData = useMemo(() => {
     const months = timeRange === '7d' ? 7 : timeRange === '1m' ? 30 : timeRange === '3m' ? 90 : timeRange === '6m' ? 180 : timeRange === '1y' ? 365 : 730
     const data = []
-    const baseValue = unifiedWallet.totalNetWorth * 0.75
-    
-    // Generate more realistic market cycles
+
+    const currentValue = (item: PortfolioItem) => (item.current_price ?? item.purchase_price) * item.quantity
+    const purchaseValue = (item: PortfolioItem) => item.purchase_price * item.quantity
+
+    const portfolioCurrentTotal = portfolioItems.reduce((sum, item) => sum + currentValue(item), 0)
+    const portfolioPurchaseTotal = portfolioItems.reduce((sum, item) => sum + purchaseValue(item), 0)
+
+    const baseCurrent = portfolioDerivedValues.hasPortfolioData ? portfolioCurrentTotal : portfolioDerivedValues.totalNetWorth
+    const basePurchase = portfolioDerivedValues.hasPortfolioData ? portfolioPurchaseTotal : portfolioDerivedValues.totalNetWorth * 0.82
+
     for (let i = 0; i < months; i++) {
       const normalizedProgress = i / months
-      
-      // Market cycle with some volatility and trend
-      const marketCycle = Math.sin(normalizedProgress * Math.PI * 4) * 0.08 // Market ups and downs
-      const uptrend = normalizedProgress * 0.25 // Overall uptrend of 25%
-      const randomWalk = Math.random() * 0.04 - 0.02 // Random daily movements
-      
-      // Calculate values with realistic variations
-      const totalMultiplier = 1 + marketCycle + uptrend + randomWalk
-      const totalNetWorth = baseValue * totalMultiplier
-      
-      // Traditional assets: less volatile, steadier growth
-      const traditionalVolatility = Math.sin(normalizedProgress * Math.PI * 3) * 0.02 + uptrend * 0.6
-      const traditionalValue = unifiedWallet.traditionalValue * 0.85 * (1 + traditionalVolatility + Math.random() * 0.01)
-      
-      // Digital assets: more volatile, higher growth potential
-      const digitalVolatility = Math.sin(normalizedProgress * Math.PI * 5) * 0.15 + uptrend * 1.2
-      const digitalValue = unifiedWallet.digitalValue * 0.8 * (1 + digitalVolatility + Math.random() * 0.03)
-      
-      // Alternative: stable middle ground
-      const alternativeValue = unifiedWallet.alternativeValue * (1 + uptrend * 0.8 + Math.random() * 0.02)
-      
-      // Wellness scores that improve slightly over time with some variation
-      const baseWellness = 70 + normalizedProgress * 15
-      const wellnessScore = Math.min(100, Math.max(60, baseWellness + Math.sin(normalizedProgress * Math.PI * 2) * 5 + Math.random() * 3))
+      const marketCycle = Math.sin(normalizedProgress * Math.PI * 4) * 0.04
+      const totalNetWorth = basePurchase + (baseCurrent - basePurchase) * normalizedProgress + baseCurrent * marketCycle
+
+      const traditionalValue = portfolioDerivedValues.traditionalValue * (0.82 + normalizedProgress * 0.2 + Math.sin(normalizedProgress * Math.PI * 2) * 0.01)
+      const digitalValue = portfolioDerivedValues.digitalValue * (0.72 + normalizedProgress * 0.32 + Math.sin(normalizedProgress * Math.PI * 5) * 0.03)
+      const alternativeValue = portfolioDerivedValues.alternativeValue * (0.85 + normalizedProgress * 0.18 + Math.sin(normalizedProgress * Math.PI * 3) * 0.015)
+
+      const uniqueTypes = new Set(portfolioItems.map(i => i.asset_type)).size || 1
+      const cashRatio = portfolioDerivedValues.cashValue / safeTotalNetWorth
+      const concentration = portfolioItems.length
+        ? Math.max(...portfolioItems.map(i => currentValue(i))) / safeTotalNetWorth
+        : 0.3
+      const positivePositionsRatio = portfolioItems.length
+        ? portfolioItems.filter(i => (i.current_price ?? i.purchase_price) >= i.purchase_price).length / portfolioItems.length
+        : 0.6
+
+      const diversificationScore = Math.min(100, 55 + uniqueTypes * 7 + normalizedProgress * 5)
+      const liquidityScore = Math.min(100, Math.max(40, cashRatio * 250 + 30 + normalizedProgress * 4))
+      const resilienceScore = Math.min(100, Math.max(45, (1 - concentration) * 60 + positivePositionsRatio * 35 + normalizedProgress * 5))
+      const wellnessScore = Math.min(100, Math.max(50, (diversificationScore + liquidityScore + resilienceScore) / 3))
       
       const date = new Date()
       date.setDate(date.getDate() - (months - i))
@@ -93,58 +169,103 @@ export default function WealthAnalytics() {
         digitalValue: parseFloat(digitalValue.toFixed(2)),
         alternativeValue: parseFloat(alternativeValue.toFixed(2)),
         wellnessScore: parseFloat(wellnessScore.toFixed(1)),
-        diversificationScore: Math.min(100, Math.max(70, 82 + Math.sin(normalizedProgress * Math.PI) * 8 + (Math.random() - 0.5) * 4)),
-        liquidityScore: Math.min(100, Math.max(65, 75 + Math.cos(normalizedProgress * Math.PI * 2) * 10 + (Math.random() - 0.5) * 3)),
-        resilienceScore: Math.min(100, Math.max(60, 78 + normalizedProgress * 10 + (Math.random() - 0.5) * 5)),
+        diversificationScore: parseFloat(diversificationScore.toFixed(1)),
+        liquidityScore: parseFloat(liquidityScore.toFixed(1)),
+        resilienceScore: parseFloat(resilienceScore.toFixed(1)),
       })
     }
     return data
-  }, [timeRange, unifiedWallet.totalNetWorth, unifiedWallet.traditionalValue, unifiedWallet.digitalValue, unifiedWallet.alternativeValue])
+  }, [timeRange, portfolioItems, portfolioDerivedValues, safeTotalNetWorth])
 
   // Wealth composition for pie chart
   const compositionData = [
     { 
       name: 'Stocks & Bonds', 
-      value: unifiedWallet.traditionalValue, 
+      value: portfolioDerivedValues.traditionalValue, 
       color: '#3b82f6',
-      percentage: (unifiedWallet.traditionalValue / safeTotalNetWorth * 100).toFixed(1)
+      percentage: (portfolioDerivedValues.traditionalValue / safeTotalNetWorth * 100).toFixed(1)
     },
     { 
       name: 'Cryptocurrency', 
-      value: unifiedWallet.digitalValue, 
+      value: portfolioDerivedValues.digitalValue, 
       color: '#f59e0b',
-      percentage: (unifiedWallet.digitalValue / safeTotalNetWorth * 100).toFixed(1)
+      percentage: (portfolioDerivedValues.digitalValue / safeTotalNetWorth * 100).toFixed(1)
     },
     { 
       name: 'Real Estate & Alt', 
-      value: unifiedWallet.alternativeValue, 
+      value: portfolioDerivedValues.alternativeValue, 
       color: '#8b5cf6',
-      percentage: (unifiedWallet.alternativeValue / safeTotalNetWorth * 100).toFixed(1)
+      percentage: (portfolioDerivedValues.alternativeValue / safeTotalNetWorth * 100).toFixed(1)
     },
     { 
       name: 'Cash & Equiv.', 
-      value: Math.max(0, unifiedWallet.totalNetWorth - unifiedWallet.traditionalValue - unifiedWallet.digitalValue - unifiedWallet.alternativeValue), 
+      value: portfolioDerivedValues.cashValue,
       color: '#22c55e',
-      percentage: ((Math.max(0, unifiedWallet.totalNetWorth - unifiedWallet.traditionalValue - unifiedWallet.digitalValue - unifiedWallet.alternativeValue) / safeTotalNetWorth) * 100).toFixed(1)
+      percentage: ((portfolioDerivedValues.cashValue / safeTotalNetWorth) * 100).toFixed(1)
     },
   ]
 
   // Asset type distribution
   const distributionColors = ['#3b82f6', '#f59e0b', '#8b5cf6', '#22c55e', '#ec4899', '#06b6d4']
-  const assetDistribution = Object.entries(wellness.diversification.asset_type_distribution).map(([name, value], index) => ({
-    name: name.replace('_', ' ').toUpperCase(),
-    value,
-    color: distributionColors[index % distributionColors.length]
-  }))
+  const assetDistribution = useMemo(() => {
+    if (portfolioItems.length) {
+      const total = portfolioItems.reduce((sum, item) => sum + ((item.current_price ?? item.purchase_price) * item.quantity), 0) || 1
+      const grouped: Record<string, number> = {}
+      portfolioItems.forEach((item) => {
+        const value = (item.current_price ?? item.purchase_price) * item.quantity
+        grouped[item.asset_type] = (grouped[item.asset_type] || 0) + value
+      })
+      return Object.entries(grouped).map(([name, value], index) => ({
+        name: name.replace('_', ' ').toUpperCase(),
+        value: (value / total) * 100,
+        color: distributionColors[index % distributionColors.length],
+      }))
+    }
+
+    return Object.entries(wellness.diversification.asset_type_distribution).map(([name, value], index) => ({
+      name: name.replace('_', ' ').toUpperCase(),
+      value,
+      color: distributionColors[index % distributionColors.length]
+    }))
+  }, [portfolioItems, wellness])
 
   // Health indicators radar chart
-  const healthRadarData = [
-    { metric: 'Diversification', score: wellness.diversification.diversification_score, fullMark: 100 },
-    { metric: 'Liquidity', score: wellness.liquidity.liquidity_score, fullMark: 100 },
-    { metric: 'Resilience', score: wellness.behavioral_resilience.resilience_score, fullMark: 100 },
-    { metric: 'Risk Management', score: 100 - wellness.diversification.concentration_risk, fullMark: 100 },
-    { metric: 'Goal Alignment', score: wellness.behavioral_resilience.goal_alignment_score, fullMark: 100 },
-  ]
+  const healthRadarData = useMemo(() => {
+    if (portfolioItems.length) {
+      const total = safeTotalNetWorth
+      const uniqueTypes = new Set(portfolioItems.map(i => i.asset_type)).size
+      const values = portfolioItems.map(i => (i.current_price ?? i.purchase_price) * i.quantity)
+      const maxWeight = values.length ? Math.max(...values) / total : 0
+      const cashValue = portfolioItems
+        .filter(i => i.asset_type === 'cash')
+        .reduce((sum, i) => sum + ((i.current_price ?? i.purchase_price) * i.quantity), 0)
+      const positiveRatio = portfolioItems.length
+        ? portfolioItems.filter(i => (i.current_price ?? i.purchase_price) >= i.purchase_price).length / portfolioItems.length
+        : 0.5
+
+      const diversification = Math.min(100, 50 + uniqueTypes * 8)
+      const liquidity = Math.min(100, Math.max(40, (cashValue / total) * 260 + 30))
+      const resilience = Math.min(100, Math.max(45, positiveRatio * 70 + (1 - maxWeight) * 30))
+      const riskManagement = Math.min(100, Math.max(20, (1 - maxWeight) * 100))
+      const goalAlignment = Math.min(100, Math.max(50, (diversification + resilience) / 2))
+
+      return [
+        { metric: 'Diversification', score: diversification, fullMark: 100 },
+        { metric: 'Liquidity', score: liquidity, fullMark: 100 },
+        { metric: 'Resilience', score: resilience, fullMark: 100 },
+        { metric: 'Risk Management', score: riskManagement, fullMark: 100 },
+        { metric: 'Goal Alignment', score: goalAlignment, fullMark: 100 },
+      ]
+    }
+
+    return [
+      { metric: 'Diversification', score: wellness.diversification.diversification_score, fullMark: 100 },
+      { metric: 'Liquidity', score: wellness.liquidity.liquidity_score, fullMark: 100 },
+      { metric: 'Resilience', score: wellness.behavioral_resilience.resilience_score, fullMark: 100 },
+      { metric: 'Risk Management', score: 100 - wellness.diversification.concentration_risk, fullMark: 100 },
+      { metric: 'Goal Alignment', score: wellness.behavioral_resilience.goal_alignment_score, fullMark: 100 },
+    ]
+  }, [portfolioItems, safeTotalNetWorth, wellness])
 
   // Calculate growth metrics
   const firstValue = historicalData[0]?.totalNetWorth || 0
@@ -152,7 +273,7 @@ export default function WealthAnalytics() {
   const growthAmount = lastValue - firstValue
   const growthPercent = firstValue > 0 ? (growthAmount / firstValue) * 100 : 0
 
-  if (isLoading) {
+  if (isLoading || portfolioLoading) {
     return <div className="py-8 text-center text-slate-300">Loading Analytics...</div>
   }
 
@@ -255,7 +376,7 @@ export default function WealthAnalytics() {
             <p className="text-xs text-slate-400 font-medium">Current Net Worth</p>
             <Activity className="h-4 w-4 text-blue-400" />
           </div>
-          <p className="text-2xl font-black text-white mb-1">{formatCurrency(unifiedWallet.totalNetWorth)}</p>
+          <p className="text-2xl font-black text-white mb-1">{formatCurrency(portfolioDerivedValues.totalNetWorth)}</p>
           <p className="text-sm text-slate-400">Across {unifiedWallet.accountsCount} accounts</p>
         </motion.div>
 
