@@ -23,31 +23,33 @@ export default function Navbar() {
   const displayName = user?.full_name || user?.username || user?.email || 'User'
 
   return (
-    <nav className="fixed top-0 left-0 right-0 bg-surface-base/95 border-b border-white/20 backdrop-blur-md z-50 shadow-lg">
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-surface-base/70 backdrop-blur-xl">
       <div className="px-8 py-3.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <BrandLogo className="w-8 h-8" />
-            <h1 className="text-xl font-bold text-white">Guardian</h1>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-2 shadow-glass">
+              <BrandLogo className="w-7 h-7" />
+            </div>
+            <h1 className="text-xl font-bold gradient-text">Guardian</h1>
           </div>
           
           <div className="flex items-center space-x-8">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 rounded-2xl border border-white/10 bg-white/[0.04] px-2 py-1">
               {navItems.map((item) => (
                 <NavLink
                   key={item.to}
                   to={item.to}
                   end={item.to === '/'}
                   className={({ isActive }) =>
-                    `flex items-center space-x-2 px-4 py-2.5 rounded-lg transition-colors text-base ${
+                    `flex items-center space-x-2 px-4 py-2 rounded-xl transition-all text-sm ${
                       isActive
-                        ? 'bg-blue-500/20 text-blue-300 border border-blue-400/30'
+                        ? 'bg-blue-500/20 text-blue-200 border border-blue-400/30 shadow-[0_0_0_1px_rgba(96,165,250,0.2)]'
                         : 'text-slate-300 hover:bg-white/10 hover:text-white border border-transparent'
                     }`
                   }
                 >
-                  <item.icon className="w-5 h-5" />
-                  <span className="font-semibold">{item.label}</span>
+                  <item.icon className="w-4 h-4" />
+                  <span className="font-semibold tracking-wide">{item.label}</span>
                 </NavLink>
               ))}
             </div>
@@ -55,7 +57,7 @@ export default function Navbar() {
             <div className="flex items-center space-x-3">
               <button
                 onClick={() => navigate('/profile')}
-                className="flex items-center space-x-2 text-sm px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-blue-500/10 hover:border-blue-500/30 transition-colors group cursor-pointer"
+                className="flex items-center space-x-2 text-sm px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-blue-500/10 hover:border-blue-500/30 transition-all group cursor-pointer"
                 title="View Profile"
               >
                 <User className="w-5 h-5 text-slate-300 group-hover:text-blue-300 transition-colors" />
@@ -63,7 +65,7 @@ export default function Navbar() {
               </button>
               <button
                 onClick={handleLogout}
-                className="flex items-center space-x-2 px-3 py-2 rounded-lg text-slate-300 hover:bg-red-500/20 hover:text-red-300 transition-colors text-sm border border-transparent hover:border-red-500/30"
+                className="flex items-center space-x-2 px-3 py-2 rounded-xl text-slate-300 hover:bg-red-500/20 hover:text-red-300 transition-all text-sm border border-transparent hover:border-red-500/30"
                 title="Logout"
               >
                 <LogOut className="w-4 h-4" />

@@ -28,25 +28,27 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-surface-base aurora-bg px-4">
+      <div className="glass-panel rounded-3xl shadow-xl p-8 w-full max-w-md relative overflow-hidden">
+        <div className="absolute -top-20 -left-16 h-44 w-44 rounded-full bg-blue-500/20 blur-3xl" />
+        <div className="absolute -bottom-20 -right-16 h-44 w-44 rounded-full bg-purple-500/20 blur-3xl" />
         <div className="text-center mb-8">
           <BrandLogo className="w-16 h-16 mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
-          <p className="text-gray-600 mt-2">Sign in to your Guardian account</p>
+          <h1 className="text-3xl font-bold gradient-text">Welcome Back</h1>
+          <p className="text-slate-300 mt-2">Sign in to your Guardian account</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
           {error && (
-            <div className="bg-danger-50 text-danger-600 px-4 py-3 rounded-lg text-sm">
+            <div className="bg-danger-50 text-danger-600 px-4 py-3 rounded-lg text-sm border border-danger-600/30">
               {error}
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <label className="block text-sm font-medium text-slate-200 mb-2">Email</label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
                 type="email"
                 value={email}
@@ -59,9 +61,9 @@ export default function Login() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+            <label className="block text-sm font-medium text-slate-200 mb-2">Password</label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
                 type="password"
                 value={password}
@@ -76,7 +78,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full btn-primary flex items-center justify-center space-x-2"
+            className="w-full btn-primary flex items-center justify-center space-x-2 shadow-[0_10px_24px_rgba(30,144,255,0.35)]"
           >
             {loading ? (
               <span>Loading...</span>
@@ -89,9 +91,9 @@ export default function Login() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
+        <p className="mt-6 text-center text-sm text-slate-300">
           Don't have an account?{' '}
-          <Link to="/register" className="text-primary-600 hover:text-primary-700 font-medium">
+          <Link to="/register" className="text-blue-300 hover:text-blue-200 font-semibold">
             Sign up
           </Link>
         </p>
