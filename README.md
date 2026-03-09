@@ -1,4 +1,4 @@
-# Guardian - Wealth Wellness Hub
+# Guardian 
 
 ## 📖 ABOUT
 
