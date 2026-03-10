@@ -9,15 +9,15 @@
 **Finance bros** - A dedicated team committed to making financial wellness accessible and actionable for everyone.
 
 ### Project Description
-Guardian provides a holistic approach to personal finance by integrating portfolio management, financial goal tracking, and wellness scoring into a unified platform. The system goes beyond simple asset tracking by analyzing user behavior, providing calm mode features to prevent impulsive decisions during market downturns, and offering personalized recommendations to improve overall financial health.
+Guardian is a financial wellness platform that combines portfolio tracking, goals, and behavioral guardrails into one experience. It helps users monitor assets, understand risk, and make calmer decisions during volatile markets.
 
 Key highlights include:
-- **Comprehensive Asset Management**: Track stocks, bonds, crypto, real estate, and more in one place
-- **Financial Wellness Scoring**: Get a holistic health score (0-100) analyzing diversification, liquidity, behavioral resilience, and risk management
-- **Behavioral Intelligence**: Smart timing checks and impulse alert systems to protect against emotional trading
-- **Calm Mode**: Investor protection features that provide perspective during market volatility
-- **Multi-Source Synchronization**: Aggregate data from traditional banking and cryptocurrency exchanges
-- **Goal-Oriented Planning**: Set and track financial goals with visual progress indicators
+- **Portfolio Intelligence**: Consolidated statement (net worth, allocation, monthly change), asset-class tabs, risk panel, and explainable recommendations.
+- **Forecasting & Retirement Gap**: Monte Carlo simulations (1,000 runs) to estimate retirement success probability and gap-to-goal.
+- **SWR Calculator**: Monthly/annual sustainable spending estimate based on current net worth.
+- **Financial Wellness Scoring**: 0–100 score across diversification, liquidity, resilience, and risk management.
+- **Calm Mode & Behavioral Signals**: Impulse checks and timing prompts to reduce emotional trading.
+- **Unified Financial View**: Traditional + crypto sync, with clear progress toward user-defined goals.
 
 ## 🛠️ Technologies Used
 
