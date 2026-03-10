@@ -3,18 +3,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import uvicorn
 
-from api.routes import health, auth, portfolio, goals, insights, sync, wellness_score, calm_mode
+from api.routes import health, auth, portfolio, goals, insights, sync, wellness_score, calm_mode, portfolio_intelligence
 from core.config import settings
 from db.database import engine, Base
+from models import portfolio_intelligence as _portfolio_intelligence_models  # noqa: F401
+from services.intelligence_scheduler import start_intelligence_scheduler, stop_intelligence_scheduler
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     Base.metadata.create_all(bind=engine)
+    start_intelligence_scheduler()
     yield
     # Shutdown
-    pass
+    stop_intelligence_scheduler()
 
 
 app = FastAPI(
@@ -42,6 +45,7 @@ app.include_router(insights.router, prefix="/api/insights", tags=["Insights"])
 app.include_router(sync.router, prefix="/api/sync", tags=["Sync"])
 app.include_router(wellness_score.router, prefix="/api/wellness-score", tags=["Wellness Score"])
 app.include_router(calm_mode.router, tags=["Calm Mode"])
+app.include_router(portfolio_intelligence.router, prefix="/api", tags=["Portfolio Intelligence"])
 
 
 @app.get("/")

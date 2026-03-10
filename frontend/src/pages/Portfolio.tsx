@@ -5,6 +5,8 @@ import WealthWallet from '../components/WealthWallet'
 import { useWealthHubData } from '../hooks/useWealthHubData'
 import CalmModeWidget from '../components/CalmModeWidget'
 import { useCalmMode } from '../hooks/useCalmMode'
+import PortfolioIntelligence from '../components/PortfolioIntelligence'
+import { AssetTab } from '../hooks/usePortfolioIntelligence'
 
 interface PortfolioItem {
   id: number
@@ -58,10 +60,8 @@ const MOCK_ITEMS: PortfolioItem[] = [
 export default function Portfolio() {
   const [items, setItems] = useState<PortfolioItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [isSeeding, setIsSeeding] = useState(false)
-  const [infoMessage, setInfoMessage] = useState('')
-  const [selectedSeedProfile, setSelectedSeedProfile] = useState<'conservative' | 'balanced' | 'aggressive'>('balanced')
   const [showModal, setShowModal] = useState(false)
+  const [activeTab, setActiveTab] = useState<AssetTab>('stocks')
   const [formData, setFormData] = useState({
     asset_name: '',
     asset_type: 'stocks',
@@ -134,24 +134,6 @@ export default function Portfolio() {
     }
   }
 
-  const handleSeedSamplePortfolio = async (profile: 'conservative' | 'balanced' | 'aggressive') => {
-    setIsSeeding(true)
-    setInfoMessage('')
-    setSelectedSeedProfile(profile)
-
-    try {
-      await api.post(`/api/portfolio/seed-demo?replace_existing=true&profile=${profile}`)
-      setInfoMessage(`${profile.charAt(0).toUpperCase() + profile.slice(1)} sample portfolio loaded successfully.`)
-      await fetchPortfolio()
-    } catch (error) {
-      console.error('Failed to seed sample portfolio:', error)
-      setItems(MOCK_ITEMS)
-      setInfoMessage('Backend unavailable. Loaded local sample portfolio.')
-    } finally {
-      setIsSeeding(false)
-    }
-  }
-
   const resetForm = () => {
     setFormData({
       asset_name: '',
@@ -180,18 +162,6 @@ export default function Portfolio() {
 
   const totalValue = items.reduce((sum, item) => sum + calculateValue(item), 0)
   const totalGainLoss = items.reduce((sum, item) => sum + calculateGainLoss(item), 0)
-  const assetTypeSummary = items.reduce<Record<string, { count: number; value: number }>>((acc, item) => {
-    const key = item.asset_type.replace('_', ' ')
-    if (!acc[key]) {
-      acc[key] = { count: 0, value: 0 }
-    }
-    acc[key].count += 1
-    acc[key].value += calculateValue(item)
-    return acc
-  }, {})
-
-  const topHolding = [...items].sort((a, b) => calculateValue(b) - calculateValue(a))[0]
-  const topGainer = [...items].sort((a, b) => calculateGainLoss(b) - calculateGainLoss(a))[0]
 
   return (
     <div className="space-y-8">
@@ -200,52 +170,20 @@ export default function Portfolio() {
       
       {/* Calm Mode Widget - Full View */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <CalmModeWidget variant="compact" showVolatilityShield={false} />
+        <CalmModeWidget variant="compact" />
       </div>
       
           <h1 className="text-2xl font-bold text-white">Portfolio</h1>
           <p className="text-slate-300 mt-1 text-sm">Manage your investment portfolio</p>
         </div>
-        <div className="flex items-center space-x-3">
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => handleSeedSamplePortfolio('conservative')}
-              disabled={isSeeding}
-              className={`text-xs px-3 py-2 rounded-lg transition-colors border ${selectedSeedProfile === 'conservative' ? 'bg-blue-500/20 text-blue-200 border-blue-400/40' : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'}`}
-            >
-              Conservative
-            </button>
-            <button
-              onClick={() => handleSeedSamplePortfolio('balanced')}
-              disabled={isSeeding}
-              className={`text-xs px-3 py-2 rounded-lg transition-colors border ${selectedSeedProfile === 'balanced' ? 'bg-blue-500/20 text-blue-200 border-blue-400/40' : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'}`}
-            >
-              Balanced
-            </button>
-            <button
-              onClick={() => handleSeedSamplePortfolio('aggressive')}
-              disabled={isSeeding}
-              className={`text-xs px-3 py-2 rounded-lg transition-colors border ${selectedSeedProfile === 'aggressive' ? 'bg-blue-500/20 text-blue-200 border-blue-400/40' : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'}`}
-            >
-              Aggressive
-            </button>
-          </div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="btn-primary flex items-center space-x-2 text-sm"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Asset</span>
-          </button>
-        </div>
+        <button
+          onClick={() => setShowModal(true)}
+          className="btn-primary flex items-center space-x-2 text-sm"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Add Asset</span>
+        </button>
       </div>
-
-      {infoMessage && (
-        <div className="card border border-blue-400/20 bg-blue-500/10 text-blue-200 text-sm">
-          {infoMessage}
-        </div>
-      )}
-
       {/* Wealth Wallet - Apple Wallet Style */}
       <div className="card">
         <WealthWallet
@@ -258,56 +196,8 @@ export default function Portfolio() {
         />
       </div>
 
-      {/* Data Insights */}
-      <div className="card space-y-4">
-        <div>
-          <h3 className="text-lg font-bold text-white">Portfolio Data Insights</h3>
-          <p className="text-slate-300 text-sm mt-1">Quick breakdown of what is driving your portfolio.</p>
-        </div>
+      <PortfolioIntelligence selectedTab={activeTab} onChangeTab={setActiveTab} />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-            <p className="text-xs text-slate-300 uppercase tracking-wide">Top Holding</p>
-            <p className="text-white font-semibold mt-2">{topHolding?.asset_name || 'N/A'}</p>
-            <p className="text-sm text-slate-300 mt-1">
-              {topHolding ? `$${calculateValue(topHolding).toFixed(2)}` : 'No data'}
-            </p>
-          </div>
-          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-            <p className="text-xs text-slate-300 uppercase tracking-wide">Top Gainer</p>
-            <p className="text-white font-semibold mt-2">{topGainer?.asset_name || 'N/A'}</p>
-            <p className={`text-sm mt-1 ${topGainer && calculateGainLoss(topGainer) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-              {topGainer ? `${calculateGainLoss(topGainer) >= 0 ? '+' : ''}$${calculateGainLoss(topGainer).toFixed(2)}` : 'No data'}
-            </p>
-          </div>
-          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-            <p className="text-xs text-slate-300 uppercase tracking-wide">Asset Categories</p>
-            <p className="text-white font-semibold mt-2">{Object.keys(assetTypeSummary).length}</p>
-            <p className="text-sm text-slate-300 mt-1">Diversified exposure</p>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-white/10">
-                <th className="text-left py-2 px-3 font-semibold text-slate-200 text-sm">Asset Type</th>
-                <th className="text-right py-2 px-3 font-semibold text-slate-200 text-sm">Items</th>
-                <th className="text-right py-2 px-3 font-semibold text-slate-200 text-sm">Total Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(assetTypeSummary).map(([type, summary]) => (
-                <tr key={type} className="border-b border-white/5">
-                  <td className="py-2.5 px-3 text-white capitalize text-sm">{type}</td>
-                  <td className="py-2.5 px-3 text-right text-slate-200 text-sm">{summary.count}</td>
-                  <td className="py-2.5 px-3 text-right text-slate-200 text-sm">${summary.value.toFixed(2)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div className="card">

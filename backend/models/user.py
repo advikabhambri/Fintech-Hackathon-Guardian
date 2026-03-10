@@ -22,3 +22,5 @@ class User(Base):
     goals = relationship("Goal", back_populates="user", cascade="all, delete-orphan")
     calm_mode_settings = relationship("CalmModeSettings", back_populates="user", uselist=False, cascade="all, delete-orphan")
     trading_actions = relationship("TradingAction", back_populates="user", cascade="all, delete-orphan")
+    portfolio_snapshots = relationship("PortfolioSnapshot", back_populates="user", cascade="all, delete-orphan")
+    recommendation_insights = relationship("RecommendationInsight", back_populates="user", cascade="all, delete-orphan")

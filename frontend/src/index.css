@@ -77,9 +77,10 @@
   }
 
   .btn-primary {
-    @apply px-3 py-2 rounded-xl overflow-hidden transition-colors font-medium;
+    @apply px-3 py-2 overflow-hidden transition-colors font-medium;
     color: #F8FAFC;
     background-color: #1E90FF;
+    border-radius: 0;
   }
 
   .btn-primary:hover {
@@ -87,9 +88,10 @@
   }
   
   .btn-secondary {
-    @apply px-3 py-2 rounded-xl overflow-hidden transition-colors font-medium border border-white/20;
+    @apply px-3 py-2 overflow-hidden transition-colors font-medium border border-white/20;
     color: #F8FAFC;
-    background-color: rgba(15, 23, 42, 0.72);
+    background-color: #0F172A;
+    border-radius: 0;
   }
 
   .btn-secondary:hover {
@@ -97,18 +99,40 @@
   }
   
   .card {
-    @apply rounded-xl overflow-hidden border border-white/15 p-4;
-    background-color: rgba(15, 23, 42, 0.72);
+    @apply overflow-hidden border border-white/15 p-4;
+    background-color: #0F172A;
     box-shadow: 0 12px 40px rgba(4, 10, 24, 0.45);
-    backdrop-filter: blur(16px);
+    border-radius: 0;
   }
   
   .input {
-    @apply w-full px-3 py-2 border border-white/20 bg-slate-900/60 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all;
+    @apply w-full px-3 py-2 border border-white/20 bg-slate-900/60 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all;
     color: #F8FAFC;
+    border-radius: 0;
   }
 
   .input::placeholder {
     color: #94A3B8;
+  }
+}
+
+@layer utilities {
+  div[class*="rounded-"],
+  section[class*="rounded-"],
+  article[class*="rounded-"],
+  aside[class*="rounded-"],
+  button[class*="rounded-"],
+  input[class*="rounded-"],
+  textarea[class*="rounded-"],
+  select[class*="rounded-"] {
+    border-radius: 0 !important;
+  }
+
+  [style*="rgba(15, 23, 42"] {
+    background-color: #0F172A !important;
+  }
+
+  [style*="rgba(30, 41, 59"] {
+    background-color: #1E293B !important;
   }
 }

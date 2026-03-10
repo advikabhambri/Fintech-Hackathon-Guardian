@@ -28,19 +28,17 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface-base aurora-bg px-4">
-      <div className="glass-panel rounded-3xl shadow-xl p-8 w-full max-w-md relative overflow-hidden">
-        <div className="absolute -top-20 -left-16 h-44 w-44 rounded-full bg-blue-500/20 blur-3xl" />
-        <div className="absolute -bottom-20 -right-16 h-44 w-44 rounded-full bg-purple-500/20 blur-3xl" />
+    <div className="min-h-screen flex items-center justify-center px-4 py-10 bg-surface-base">
+      <div className="card w-full max-w-md p-8 border-white/15">
         <div className="text-center mb-8">
           <BrandLogo className="w-16 h-16 mx-auto mb-4" />
-          <h1 className="text-3xl font-bold gradient-text">Welcome Back</h1>
+          <h1 className="text-3xl font-bold text-white">Welcome Back</h1>
           <p className="text-slate-300 mt-2">Sign in to your Guardian account</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="bg-danger-50 text-danger-600 px-4 py-3 rounded-lg text-sm border border-danger-600/30">
+            <div className="bg-danger-500/15 border border-danger-500/35 text-red-300 px-4 py-3 rounded-xl text-sm">
               {error}
             </div>
           )}
@@ -78,7 +76,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full btn-primary flex items-center justify-center space-x-2 shadow-[0_10px_24px_rgba(30,144,255,0.35)]"
+            className="w-full btn-primary flex items-center justify-center space-x-2"
           >
             {loading ? (
               <span>Loading...</span>
@@ -93,7 +91,7 @@ export default function Login() {
 
         <p className="mt-6 text-center text-sm text-slate-300">
           Don't have an account?{' '}
-          <Link to="/register" className="text-blue-300 hover:text-blue-200 font-semibold">
+          <Link to="/register" className="text-blue-300 hover:text-blue-200 font-medium">
             Sign up
           </Link>
         </p>
