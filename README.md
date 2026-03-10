@@ -9,15 +9,12 @@
 **Finance bros** - A dedicated team committed to making financial wellness accessible and actionable for everyone.
 
 ### Project Description
-Guardian is a financial wellness platform that combines portfolio tracking, goals, and behavioral guardrails into one experience. It helps users monitor assets, understand risk, and make calmer decisions during volatile markets.
-
-Key highlights include:
-- **Portfolio Intelligence**: Consolidated statement (net worth, allocation, monthly change), asset-class tabs, risk panel, and explainable recommendations.
-- **Forecasting & Retirement Gap**: Monte Carlo simulations (1,000 runs) to estimate retirement success probability and gap-to-goal.
-- **SWR Calculator**: Monthly/annual sustainable spending estimate based on current net worth.
-- **Financial Wellness Scoring**: 0–100 score across diversification, liquidity, resilience, and risk management.
-- **Calm Mode & Behavioral Signals**: Impulse checks and timing prompts to reduce emotional trading.
-- **Unified Financial View**: Traditional + crypto sync, with clear progress toward user-defined goals.
+Project Description
+Guardian is an intelligent Wealth Wellness Hub that transforms fragmented financial data into a unified, actionable view of an investor’s financial health. Today’s investors manage assets across multiple platforms — from bank accounts and traditional investment portfolios to cryptocurrencies and alternative assets. This fragmentation obscures their true financial position and makes holistic financial decision-making difficult.
+Guardian addresses this challenge by creating a secure Wealth Wallet that aggregates traditional, digital, and alternative assets into a single platform. The system automatically calculates net worth, tracks asset allocation, and provides a comprehensive view of portfolio composition in real time.
+Beyond aggregation, Guardian integrates financial wellness analytics to assess diversification, liquidity, resilience, risk exposure, and goal alignment. Through interactive dashboards and visual analytics, users can track wealth trends, evaluate portfolio health, and understand how their financial position evolves over time.
+To move from insight to action, Guardian includes a Portfolio Intelligence engine that identifies risk concentration and provides explainable recommendations for portfolio rebalancing. A Monte Carlo forecasting module further enables scenario-based retirement planning by estimating success probability and sustainable withdrawal rates.
+By combining wealth aggregation, financial health analytics, and predictive intelligence, Guardian empowers investors to make informed, resilient, and long-term wealth decisions
 
 ## 🛠️ Technologies Used
 
