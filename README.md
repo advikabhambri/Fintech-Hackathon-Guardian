@@ -291,6 +291,17 @@ Guardian/
 - UI location:
    - Added on the **Portfolio page** as the **Portfolio Intelligence** section
 
+### 🆕 Forecasting & Retirement Gap
+- Connects current net worth to future retirement outcomes
+- **Monte Carlo Simulations (1,000 runs):** Estimates probability of reaching target corpus by retirement age
+   - Example output: “You have an 82% chance of reaching $2M by age 60”
+   - Includes median, downside (P10), and upside (P90) projected corpus
+- **Retirement Gap:** Calculates shortfall between projected median corpus and retirement target
+- **Safe Withdrawal Rate (SWR) Calculator:** Estimates sustainable spending from current net worth
+   - Monthly and annual spending estimates using configurable SWR (default 4%)
+- Displayed in the **Portfolio Intelligence** section under a dedicated card titled
+   **Forecasting & Retirement Gap**
+
 ## 🛠️ API Endpoints
 
 ### Authentication
@@ -338,6 +349,8 @@ Guardian/
 - `GET /api/risk/exposure/sectors` - Get sector exposure and overexposure flags
 - `GET /api/recommendations?risk_profile=moderate` - Generate and persist advisor recommendations
 - `GET /api/recommendations/history?limit=20` - Get persisted recommendation history with explainability
+- `GET /api/forecast/retirement?simulations=1000&retirement_age=60` - Run Monte Carlo retirement forecast
+- `GET /api/forecast/swr?swr_rate=0.04` - Calculate safe withdrawal monthly/annual spending estimate
 - `POST /api/sync/market-data` - Queue market data synchronization
 - `POST /api/sync/accounts` - Queue account synchronization
 

@@ -83,6 +83,33 @@ export interface RecommendationHistoryResponse {
   }>
 }
 
+export interface RetirementForecastResponse {
+  current_age: number
+  retirement_age: number
+  years_to_retirement: number
+  simulations: number
+  current_net_worth: number
+  target_amount: number
+  annual_contribution: number
+  assumptions: {
+    expected_return: number
+    volatility: number
+  }
+  success_probability: number
+  projected_median: number
+  projected_p10: number
+  projected_p90: number
+  retirement_gap: number
+}
+
+export interface SWRResponse {
+  net_worth: number
+  swr_rate: number
+  annual_safe_withdrawal: number
+  monthly_safe_withdrawal: number
+  note: string
+}
+
 const FALLBACK_CONSOLIDATED: ConsolidatedResponse = {
   as_of_date: new Date().toISOString().slice(0, 10),
   total_portfolio: 862500,
@@ -147,6 +174,33 @@ const FALLBACK_RECS: RecommendationsResponse = {
   ],
 }
 
+const FALLBACK_FORECAST: RetirementForecastResponse = {
+  current_age: 30,
+  retirement_age: 60,
+  years_to_retirement: 30,
+  simulations: 1000,
+  current_net_worth: 862500,
+  target_amount: 2000000,
+  annual_contribution: 12000,
+  assumptions: {
+    expected_return: 0.07,
+    volatility: 0.15,
+  },
+  success_probability: 82,
+  projected_median: 2275000,
+  projected_p10: 1240000,
+  projected_p90: 3980000,
+  retirement_gap: 0,
+}
+
+const FALLBACK_SWR: SWRResponse = {
+  net_worth: 862500,
+  swr_rate: 0.04,
+  annual_safe_withdrawal: 34500,
+  monthly_safe_withdrawal: 2875,
+  note: 'Educational estimate based on a static withdrawal-rate assumption; not investment advice.',
+}
+
 export function usePortfolioIntelligence(selectedTab: AssetTab) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -155,6 +209,8 @@ export function usePortfolioIntelligence(selectedTab: AssetTab) {
   const [exposure, setExposure] = useState<SectorExposureResponse>(FALLBACK_EXPOSURE)
   const [recommendations, setRecommendations] = useState<RecommendationsResponse>(FALLBACK_RECS)
   const [recommendationHistory, setRecommendationHistory] = useState<RecommendationHistoryResponse>({ count: 0, history: [] })
+  const [retirementForecast, setRetirementForecast] = useState<RetirementForecastResponse>(FALLBACK_FORECAST)
+  const [swr, setSwr] = useState<SWRResponse>(FALLBACK_SWR)
   const [holdingsByTab, setHoldingsByTab] = useState<Record<AssetTab, AssetClassHoldingsResponse>>(FALLBACK_HOLDINGS)
 
   const holdingsData = useMemo(() => holdingsByTab[selectedTab] ?? FALLBACK_HOLDINGS[selectedTab], [holdingsByTab, selectedTab])
@@ -165,17 +221,21 @@ export function usePortfolioIntelligence(selectedTab: AssetTab) {
         setIsLoading(true)
         setError(null)
 
-        const [consolidatedRes, riskRes, exposureRes, recommendationsRes] = await Promise.all([
+        const [consolidatedRes, riskRes, exposureRes, recommendationsRes, forecastRes, swrRes] = await Promise.all([
           api.get<ConsolidatedResponse>('/api/portfolio/consolidated'),
           api.get<RiskScoreResponse>('/api/risk/score'),
           api.get<SectorExposureResponse>('/api/risk/exposure/sectors'),
           api.get<RecommendationsResponse>('/api/recommendations?risk_profile=moderate'),
+          api.get<RetirementForecastResponse>('/api/forecast/retirement?simulations=1000&retirement_age=60'),
+          api.get<SWRResponse>('/api/forecast/swr?swr_rate=0.04'),
         ])
 
         setConsolidated(consolidatedRes.data)
         setRisk(riskRes.data)
         setExposure(exposureRes.data)
         setRecommendations(recommendationsRes.data)
+        setRetirementForecast(forecastRes.data)
+        setSwr(swrRes.data)
 
         try {
           const historyRes = await api.get<RecommendationHistoryResponse>('/api/recommendations/history?limit=10')
@@ -189,6 +249,8 @@ export function usePortfolioIntelligence(selectedTab: AssetTab) {
         setRisk(FALLBACK_RISK)
         setExposure(FALLBACK_EXPOSURE)
         setRecommendations(FALLBACK_RECS)
+        setRetirementForecast(FALLBACK_FORECAST)
+        setSwr(FALLBACK_SWR)
         setRecommendationHistory({
           count: FALLBACK_RECS.recommendations.length,
           history: FALLBACK_RECS.recommendations.map((item) => ({
@@ -232,6 +294,8 @@ export function usePortfolioIntelligence(selectedTab: AssetTab) {
     exposure,
     recommendations,
     recommendationHistory,
+    retirementForecast,
+    swr,
     holdingsData,
   }
 }

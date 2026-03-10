@@ -1,4 +1,5 @@
 from datetime import date, datetime, timedelta
+import random
 from statistics import pstdev
 from typing import Dict, List
 
@@ -8,6 +9,7 @@ from sqlalchemy import desc
 
 from core.security import get_current_user
 from db.database import get_db
+from models.goal import Goal, GoalType
 from models.portfolio_intelligence import PortfolioSnapshot, RecommendationInsight
 from models.portfolio import Portfolio
 from models.user import User
@@ -267,6 +269,61 @@ def _explainability_text(reason: str, action: str, confidence: float, expected_r
         f"Model confidence is {confidence_label} ({round(confidence * 100)}%), "
         f"with estimated risk-score impact of {expected_risk_impact} points."
     )
+
+
+def _resolve_retirement_target(db: Session, user_id: int, default_target: float = 2_000_000.0) -> float:
+    retirement_goal = (
+        db.query(Goal)
+        .filter(Goal.user_id == user_id, Goal.goal_type == GoalType.RETIREMENT)
+        .order_by(desc(Goal.target_amount))
+        .first()
+    )
+    if retirement_goal and retirement_goal.target_amount and retirement_goal.target_amount > 0:
+        return float(retirement_goal.target_amount)
+    return default_target
+
+
+def _monte_carlo_retirement_projection(
+    initial_wealth: float,
+    years: int,
+    annual_contribution: float,
+    expected_return: float,
+    volatility: float,
+    simulations: int,
+    target_amount: float,
+) -> Dict:
+    if years <= 0:
+        final_values = [initial_wealth for _ in range(simulations)]
+    else:
+        final_values: List[float] = []
+        for _ in range(simulations):
+            value = max(0.0, initial_wealth)
+            for _year in range(years):
+                yearly_return = random.gauss(expected_return, volatility)
+                value = max(0.0, (value + annual_contribution) * (1 + yearly_return))
+            final_values.append(value)
+
+    final_values.sort()
+    hit_count = sum(1 for v in final_values if v >= target_amount)
+    success_probability = (hit_count / simulations * 100) if simulations > 0 else 0.0
+
+    def percentile(p: float) -> float:
+        if not final_values:
+            return 0.0
+        idx = int(round((len(final_values) - 1) * p))
+        return final_values[max(0, min(len(final_values) - 1, idx))]
+
+    median_value = percentile(0.5)
+    p10_value = percentile(0.1)
+    p90_value = percentile(0.9)
+
+    return {
+        "success_probability": round(success_probability, 2),
+        "projected_median": round(median_value, 2),
+        "projected_p10": round(p10_value, 2),
+        "projected_p90": round(p90_value, 2),
+        "retirement_gap": round(max(0.0, target_amount - median_value), 2),
+    }
 
 
 def persist_daily_snapshot_for_user(db: Session, user_id: int, snapshot_date: date | None = None) -> Dict:
@@ -574,6 +631,73 @@ async def get_recommendation_history(
             }
             for row in rows
         ],
+    }
+
+
+@router.get("/forecast/retirement")
+async def get_retirement_forecast(
+    current_age: int = Query(default=30, ge=18, le=90),
+    retirement_age: int = Query(default=60, ge=30, le=95),
+    simulations: int = Query(default=1000, ge=100, le=5000),
+    annual_contribution: float = Query(default=12000.0, ge=0.0),
+    expected_return: float = Query(default=0.07, ge=-0.2, le=0.4),
+    volatility: float = Query(default=0.15, ge=0.01, le=0.8),
+    target_amount: float | None = Query(default=None, ge=1000.0),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    portfolio_items = db.query(Portfolio).filter(Portfolio.user_id == current_user.id).all()
+    holdings = _build_holdings(portfolio_items)
+    net_worth_now = _total_assets(holdings)
+
+    years = max(0, retirement_age - current_age)
+    resolved_target = float(target_amount) if target_amount else _resolve_retirement_target(db, current_user.id)
+
+    projection = _monte_carlo_retirement_projection(
+        initial_wealth=net_worth_now,
+        years=years,
+        annual_contribution=annual_contribution,
+        expected_return=expected_return,
+        volatility=volatility,
+        simulations=simulations,
+        target_amount=resolved_target,
+    )
+
+    return {
+        "current_age": current_age,
+        "retirement_age": retirement_age,
+        "years_to_retirement": years,
+        "simulations": simulations,
+        "current_net_worth": round(net_worth_now, 2),
+        "target_amount": round(resolved_target, 2),
+        "annual_contribution": round(annual_contribution, 2),
+        "assumptions": {
+            "expected_return": expected_return,
+            "volatility": volatility,
+        },
+        **projection,
+    }
+
+
+@router.get("/forecast/swr")
+async def get_safe_withdrawal_rate(
+    swr_rate: float = Query(default=0.04, ge=0.01, le=0.08),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    portfolio_items = db.query(Portfolio).filter(Portfolio.user_id == current_user.id).all()
+    holdings = _build_holdings(portfolio_items)
+    net_worth_now = _total_assets(holdings)
+
+    annual_safe_withdrawal = net_worth_now * swr_rate
+    monthly_safe_withdrawal = annual_safe_withdrawal / 12
+
+    return {
+        "net_worth": round(net_worth_now, 2),
+        "swr_rate": swr_rate,
+        "annual_safe_withdrawal": round(annual_safe_withdrawal, 2),
+        "monthly_safe_withdrawal": round(monthly_safe_withdrawal, 2),
+        "note": "Educational estimate based on a static withdrawal-rate assumption; not investment advice.",
     }
 
 

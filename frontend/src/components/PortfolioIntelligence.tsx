@@ -19,7 +19,7 @@ function formatCurrency(value: number) {
 }
 
 export default function PortfolioIntelligence({ selectedTab, onChangeTab }: Props) {
-  const { isLoading, consolidated, risk, exposure, recommendations, recommendationHistory, holdingsData } = usePortfolioIntelligence(selectedTab)
+  const { isLoading, consolidated, risk, exposure, recommendations, recommendationHistory, retirementForecast, swr, holdingsData } = usePortfolioIntelligence(selectedTab)
 
   if (isLoading) {
     return <div className="card text-slate-300">Loading Portfolio Intelligence...</div>
@@ -219,6 +219,57 @@ export default function PortfolioIntelligence({ selectedTab, onChangeTab }: Prop
                 <p className="text-[11px] text-slate-400">{new Date(row.created_at).toLocaleString()}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-base font-semibold text-white">Forecasting & Retirement Gap</h3>
+            <p className="text-xs text-slate-400 mt-1">Monte Carlo retirement probability (1,000 simulations) + Safe Withdrawal Rate</p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-slate-400">Retirement Goal</p>
+            <p className="text-sm text-white font-semibold">{formatCurrency(retirementForecast.target_amount)} by age {retirementForecast.retirement_age}</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div className="border border-white/10 bg-slate-900 p-4">
+            <p className="text-xs text-slate-400">Success Probability</p>
+            <p className={`text-2xl font-bold mt-1 ${retirementForecast.success_probability >= 70 ? 'text-green-400' : retirementForecast.success_probability >= 50 ? 'text-yellow-400' : 'text-red-400'}`}>
+              {retirementForecast.success_probability.toFixed(1)}%
+            </p>
+          </div>
+          <div className="border border-white/10 bg-slate-900 p-4">
+            <p className="text-xs text-slate-400">Projected Median Corpus</p>
+            <p className="text-xl font-bold text-white mt-1">{formatCurrency(retirementForecast.projected_median)}</p>
+            <p className="text-[11px] text-slate-500 mt-1">P10: {formatCurrency(retirementForecast.projected_p10)} · P90: {formatCurrency(retirementForecast.projected_p90)}</p>
+          </div>
+          <div className="border border-white/10 bg-slate-900 p-4">
+            <p className="text-xs text-slate-400">Retirement Gap</p>
+            <p className={`text-xl font-bold mt-1 ${retirementForecast.retirement_gap > 0 ? 'text-red-400' : 'text-green-400'}`}>
+              {retirementForecast.retirement_gap > 0 ? formatCurrency(retirementForecast.retirement_gap) : 'On Track'}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="border border-white/10 bg-slate-900 p-4">
+            <p className="text-xs text-slate-400">Safe Withdrawal Rate (SWR)</p>
+            <p className="text-sm text-slate-300 mt-1">At {(swr.swr_rate * 100).toFixed(1)}% SWR</p>
+            <p className="text-2xl font-bold text-white mt-2">{formatCurrency(swr.monthly_safe_withdrawal)}/month</p>
+            <p className="text-xs text-slate-400 mt-1">{formatCurrency(swr.annual_safe_withdrawal)} annually</p>
+          </div>
+
+          <div className="border border-white/10 bg-slate-900 p-4">
+            <p className="text-xs text-slate-400">How it works</p>
+            <ul className="mt-2 space-y-1 text-xs text-slate-300 list-disc pl-4">
+              <li>Runs 1,000 simulated return paths using expected return + volatility assumptions.</li>
+              <li>Computes probability of reaching your retirement target by the selected age.</li>
+              <li>SWR estimates sustainable spending from current net worth using a conservative rate.</li>
+            </ul>
           </div>
         </div>
       </div>
