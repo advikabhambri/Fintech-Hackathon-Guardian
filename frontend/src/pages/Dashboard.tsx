@@ -98,13 +98,27 @@ function colorForHealthIndicator(score: number) {
 export default function Dashboard() {
   const { isLoading, error, wellness, unifiedWallet, recommendations } = useWealthHubData()
   const [stressDrop, setStressDrop] = useState(20)
+  const [selectedAsset, setSelectedAsset] = useState('S&P 500')
 
   const scenario = useMemo(() => {
     const dropRatio = Math.min(Math.max(stressDrop, 0), 80) / 100
-    const adjustedWorth = unifiedWallet.totalNetWorth * (1 - dropRatio * 0.55)
+    
+    // Different assets have different portfolio impacts
+    const impactFactors: Record<string, number> = {
+      'S&P 500': 0.55,
+      'Bitcoin': 0.35,
+      'Ethereum': 0.30,
+      'Gold': 0.40,
+      'Real Estate': 0.45,
+      'Tech Stocks': 0.60,
+      'Bonds': 0.25,
+    }
+    
+    const impactFactor = impactFactors[selectedAsset] || 0.55
+    const adjustedWorth = unifiedWallet.totalNetWorth * (1 - dropRatio * impactFactor)
     const adjustedScore = Math.max(0, wellness.overall_score - dropRatio * 25)
     return { adjustedWorth, adjustedScore }
-  }, [stressDrop, unifiedWallet.totalNetWorth, wellness.overall_score])
+  }, [stressDrop, selectedAsset, unifiedWallet.totalNetWorth, wellness.overall_score])
 
   const treemapData = useMemo(() => {
     const total = unifiedWallet.totalNetWorth || 1
@@ -429,8 +443,25 @@ export default function Dashboard() {
             </div>
           </div>
 
+          <div className="mb-4">
+            <label className="block text-xs text-slate-400 mb-2">Select Asset</label>
+            <select
+              value={selectedAsset}
+              onChange={(e) => setSelectedAsset(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl bg-slate-800/50 border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            >
+              <option value="S&P 500">S&P 500</option>
+              <option value="Bitcoin">Bitcoin</option>
+              <option value="Ethereum">Ethereum</option>
+              <option value="Gold">Gold</option>
+              <option value="Real Estate">Real Estate</option>
+              <option value="Tech Stocks">Tech Stocks</option>
+              <option value="Bonds">Bonds</option>
+            </select>
+          </div>
+
           <label className="block text-sm text-slate-300 mb-3">
-            What if S&P 500 drops by <span className="text-white font-semibold">{stressDrop}%</span>?
+            What if <span className="text-blue-400 font-semibold">{selectedAsset}</span> drops by <span className="text-white font-semibold">{stressDrop}%</span>?
           </label>
           <input
             type="range"
