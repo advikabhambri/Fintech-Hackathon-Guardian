@@ -277,6 +277,20 @@ Guardian/
 - Personalized recommendations for financial improvement
 - Detailed breakdown of strengths and weaknesses
 
+### 🆕 Portfolio Intelligence Module
+- Consolidated portfolio statement with total portfolio, allocation, monthly change, and net worth
+- Asset class intelligence tabs for stocks, bonds, gold, FD, insurance, and crypto
+- Holdings analytics per tab: daily/1M/1Y P&L, sector allocation, top gainers and losers
+- Risk panel with overexposure detection (sector concentration) and weighted overall risk score
+- Recommendation panel with rule-based advisor actions, confidence, expected risk impact, and explainability text
+- Historical persistence:
+   - Daily snapshots stored in `portfolio_snapshots`
+   - Recommendation history stored in `recommendation_insights`
+- Background automation:
+   - Daily scheduled intelligence recalculation using APScheduler
+- UI location:
+   - Added on the **Portfolio page** as the **Portfolio Intelligence** section
+
 ## 🛠️ API Endpoints
 
 ### Authentication
@@ -313,6 +327,19 @@ Guardian/
 ### Insights
 - `GET /api/insights/dashboard` - Get dashboard data
 - `GET /api/insights/portfolio-summary` - Get portfolio summary
+
+### 🆕 Portfolio Intelligence
+- `GET /api/portfolio/consolidated` - Get consolidated statement (and persist daily snapshot)
+- `GET /api/portfolio/allocation?period=1M` - Get allocation by asset class
+- `GET /api/portfolio/asset-class/{type}/holdings` - Get holdings + P&L + sector breakdown for one asset class
+- `GET /api/portfolio/asset/{symbol}/performance?range=1D|1M|1Y` - Get asset performance series
+- `GET /api/portfolio/snapshots?days=30` - Get historical daily portfolio snapshots
+- `GET /api/risk/score` - Get weighted portfolio risk score and component scores
+- `GET /api/risk/exposure/sectors` - Get sector exposure and overexposure flags
+- `GET /api/recommendations?risk_profile=moderate` - Generate and persist advisor recommendations
+- `GET /api/recommendations/history?limit=20` - Get persisted recommendation history with explainability
+- `POST /api/sync/market-data` - Queue market data synchronization
+- `POST /api/sync/accounts` - Queue account synchronization
 
 > 📘 **For detailed API documentation with examples and request/response schemas, see [API_DOCUMENTATION.md](API_DOCUMENTATION.md)**
 >
