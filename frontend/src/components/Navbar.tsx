@@ -17,7 +17,7 @@ export default function Navbar() {
 
   const handleLogout = () => {
     logout()
-    navigate('/login')
+    navigate('/')
   }
 
   const displayName = user?.full_name || user?.username || user?.email || 'User'
