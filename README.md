@@ -14,7 +14,7 @@ Guardian is an intelligent Wealth Wellness Hub that transforms fragmented financ
 Guardian addresses this challenge by creating a secure Wealth Wallet that aggregates traditional, digital, and alternative assets into a single platform. The system automatically calculates net worth, tracks asset allocation, and provides a comprehensive view of portfolio composition in real time.
 Beyond aggregation, Guardian integrates financial wellness analytics to assess diversification, liquidity, resilience, risk exposure, and goal alignment. Through interactive dashboards and visual analytics, users can track wealth trends, evaluate portfolio health, and understand how their financial position evolves over time.
 To move from insight to action, Guardian includes a Portfolio Intelligence engine that identifies risk concentration and provides explainable recommendations for portfolio rebalancing. A Monte Carlo forecasting module further enables scenario-based retirement planning by estimating success probability and sustainable withdrawal rates.
-By combining wealth aggregation, financial health analytics, and predictive intelligence, Guardian empowers investors to make informed, resilient, and long-term wealth decisions
+By combining wealth aggregation, financial health analytics, and predictive intelligence, Guardian empowers investors to make informed, resilient, and long-term wealth decisions.
 
 ## 🛠️ Technologies Used
 
